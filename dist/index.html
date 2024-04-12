@@ -1,27 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>curious trio - start</title>
-    <link rel="stylesheet" href="style.css"> <!-- Link to your existing CSS file -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@apollo/client@3.9.10/dist/apollo-client.cjs.js"></script>
-<script defer src="bundle.js"></script> -->
-<script defer src="bundle.js"></script></head>
-<body>
-    <main class="main-content">
-        <div id="root"></div>
-        <div class="search-box">
-            <form id="searchForm">
-                <input type="text" name="search" placeholder="what are we looking for today?" id="searchInput">
-                <button type="submit" class="submit-button">let's go!</button>
-            </form>
-        </div>
-        <div id="searchResults"></div>
-    </main>
-    <footer>
-        <p>&copy; 2024 Curious Trio. All rights reserved.</p>
-    </footer>
-    <script defer src="./dist/bundle.js"></script>
-</body>
-</html>
+<head><script defer src="bundle.js"></script></head>Html Webpack Plugin:
+<pre>
+  Error: Child compilation failed:
+  Module not found: Error: Can't resolve '/Users/dangnguyen/popstart/index.html' in '/Users/dangnguyen/popstart  '
+  ModuleNotFoundError: Module not found: Error: Can't resolve '/Users/dangnguyen/popstart/index.html' in '/User  s/dangnguyen/popstart'
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/Compilation.js:2094:28
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:895:13
+      at eval (eval at create (/Users/dangnguyen/popstart/node_modules/tapable/lib/HookCodeFactory.js:33:10), <  anonymous>:10:1)
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:332:22
+      at eval (eval at create (/Users/dangnguyen/popstart/node_modules/tapable/lib/HookCodeFactory.js:33:10), <  anonymous>:9:1)
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:509:22
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:155:11
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:767:25
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:979:8
+      at /Users/dangnguyen/popstart/node_modules/webpack/lib/NormalModuleFactory.js:1109:5
+  
+  - Compilation.js:2094 
+    [popstart]/[webpack]/lib/Compilation.js:2094:28
+  
+  - NormalModuleFactory.js:895 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:895:13
+  
+  
+  - NormalModuleFactory.js:332 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:332:22
+  
+  
+  - NormalModuleFactory.js:509 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:509:22
+  
+  - NormalModuleFactory.js:155 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:155:11
+  
+  - NormalModuleFactory.js:767 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:767:25
+  
+  - NormalModuleFactory.js:979 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:979:8
+  
+  - NormalModuleFactory.js:1109 
+    [popstart]/[webpack]/lib/NormalModuleFactory.js:1109:5
+  
+  - child-compiler.js:174 
+    [popstart]/[html-webpack-plugin]/lib/child-compiler.js:174:18
+  
+  - Compiler.js:605 finalCallback
+    [popstart]/[webpack]/lib/Compiler.js:605:5
+  
+  - Compiler.js:640 
+    [popstart]/[webpack]/lib/Compiler.js:640:11
+  
+  - Compiler.js:1329 
+    [popstart]/[webpack]/lib/Compiler.js:1329:17
+  
+  
+  - Hook.js:18 Hook.CALL_ASYNC_DELEGATE [as _callAsync]
+    [popstart]/[tapable]/lib/Hook.js:18:14
+  
+  - Compiler.js:1325 
+    [popstart]/[webpack]/lib/Compiler.js:1325:33
+  
+  - Compilation.js:2900 finalCallback
+    [popstart]/[webpack]/lib/Compilation.js:2900:11
+  
+  - Compilation.js:3209 
+    [popstart]/[webpack]/lib/Compilation.js:3209:11
+  
+  
+</pre>
