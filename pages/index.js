@@ -1,4 +1,3 @@
-// pages/index.js
 import React, { useState } from 'react';
 
 function HomePage() {
@@ -11,19 +10,34 @@ function HomePage() {
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ searchTerm }),
       });
-      const data = await response.json();
-      if (data.errors) {
-        setError('Failed to fetch results');
+
+      // Check if response is ok (status in the range 200-299)
+      if (!response.ok) {
+        // Not OK? Set error and clear results
+        setError(`Error: ${response.statusText}`);
         setResults([]);
       } else {
-        // Assuming the structure of the data includes amazonProductSearchResults
-        setResults(data.amazonProductSearchResults || []);
+        const contentType = response.headers.get("content-type");
+        if(contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await response.json();
+
+          if (data.errors) {
+            setError('Failed to fetch results');
+            setResults([]);
+          } else {
+            // Assuming the structure of the data includes amazonProductSearchResults
+            setResults(data.amazonProductSearchResults || []);
+          }
+        } else {
+          setError("Oops, we didn't get JSON back!");
+        }
       }
     } catch (err) {
       console.error('Fetch error:', err);
