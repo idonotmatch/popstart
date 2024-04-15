@@ -2,6 +2,7 @@ import axios from 'axios';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
+    console.log('Method not allowed');
     return res.status(405).end(); // Method Not Allowed
   }
 
@@ -22,22 +23,23 @@ export default async function handler(req, res) {
   };
 
   try {
+    console.log('Making API request', params);
     const response = await axios.get('https://api.rainforestapi.com/request', { params });
+    console.log('API response received');
 
     if (response.status === 200) {
-      // Assuming the data structure returned by Rainforest is directly usable
+      console.log('Successful API response');
       return res.status(200).json(response.data);
     } else {
-      // Handle cases where the API returns a non-200 status
       throw new Error(`API call failed with status: ${response.status}`);
     }
   } catch (error) {
     console.error('Search API error:', error);
     if (error.response) {
-      // Handle specific API errors or bad responses
+      console.log('API responded with an error', error.response.data);
       return res.status(error.response.status).json({ message: error.response.data.message });
     } else {
-      // Generic error handling if the request failed before hitting the API
+      console.log('Error making API request');
       return res.status(500).json({ error: 'Internal Server Error' });
     }
   }
