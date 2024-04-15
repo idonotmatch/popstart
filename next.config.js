@@ -1,7 +1,7 @@
 module.exports = {
     basePath: '/popstart',
     assetPrefix: '/popstart',
-    output: 'export',
+    // output: 'export',
     // Uncomment the following lines if you need to customize the static export behavior
     // exportPathMap: async function(defaultPathMap, { dev, dir, outDir, distDir, buildId }) {
     //   return {

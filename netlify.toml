@@ -9,4 +9,4 @@ X-XSS-Protection = "1; mode=block"
 
 [build]
 command = "npm run build"
-publish = "out"
+publish = ".next"
