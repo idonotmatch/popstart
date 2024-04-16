@@ -19,6 +19,48 @@ const typeDefs = gql`
   }
 `;
 
+// const resolvers = {
+//   Query: {
+//     searchProducts: async (_, { searchTerm }) => {
+//       const params = {
+//         api_key: process.env.RAINFOREST_API_KEY,
+//         type: "search",
+//         amazon_domain: "amazon.com",
+//         search_term: searchTerm,
+//         exclude_sponsored: "true",
+//         currency: "usd",
+//         associate_id: "curioustrio-20",
+//         page: "1",
+//         max_page: "1",
+//         output: "json",
+//         include_html: "false"
+//       };
+
+//       try {
+//         const response = await axios.get('https://api.rainforestapi.com/request', { params });
+//         if (response.status !== 200) {
+//           throw new Error(`API call failed with status: ${response.status}`);
+//         }
+
+//         return response.data.search_results.map(item => ({
+//           asin: item.asin,
+//           title: item.title,
+//           link: item.link,
+//           image: item.image,
+//           isPrime: item.is_prime,
+//           rating: item.rating,
+//           ratingsTotal: item.ratings_total,
+//           price: `$${item.price.value.toFixed(2)}`,
+//           availability: item.availability ? item.availability.raw : "Unavailable"
+//         }));
+//       } catch (error) {
+//         console.error('Failed to fetch data from Rainforest API:', error);
+//         throw new Error('Failed to fetch data');
+//       }
+//     }
+//   }
+// };
+
 const resolvers = {
   Query: {
     searchProducts: async (_, { searchTerm }) => {
@@ -41,18 +83,8 @@ const resolvers = {
         if (response.status !== 200) {
           throw new Error(`API call failed with status: ${response.status}`);
         }
-
-        return response.data.search_results.map(item => ({
-          asin: item.asin,
-          title: item.title,
-          link: item.link,
-          image: item.image,
-          isPrime: item.is_prime,
-          rating: item.rating,
-          ratingsTotal: item.ratings_total,
-          price: `$${item.price.value.toFixed(2)}`,
-          availability: item.availability ? item.availability.raw : "Unavailable"
-        }));
+        // Return the entire JSON data as a string
+        return JSON.stringify(response.data);
       } catch (error) {
         console.error('Failed to fetch data from Rainforest API:', error);
         throw new Error('Failed to fetch data');
@@ -69,3 +101,5 @@ export const config = {
     bodyParser: false
   }
 };
+
+
