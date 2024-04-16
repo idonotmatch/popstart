@@ -5,11 +5,13 @@ function HomePage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
+  const [searchAttempted, setSearchAttempted] = useState(false);  // New state to track if a search has been made
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSearchAttempted(true);  // Set that a search has been attempted
 
     try {
       const response = await fetch('/api/search', {
@@ -30,6 +32,7 @@ function HomePage() {
         setResults([]);
       } else {
         setResults(data.search_results);
+        setError('');  // Clear any errors if successful
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -68,7 +71,7 @@ function HomePage() {
             </div>
           ))
         ) : (
-          !loading && <p>No results found. Try another search.</p>
+          searchAttempted && !loading && <p>No results found. Try another search.</p>
         )}
       </div>
     </div>
