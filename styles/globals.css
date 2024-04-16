@@ -101,3 +101,43 @@ footer {
     cursor: pointer; /* Add a pointer on hover */
     border-radius: 12px; /* Rounded corners */
 }
+
+form {
+    width: 100%;
+    max-width: 600px; /* Control the width of the form */
+    margin: 20px auto; /* Center the form horizontally */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Styling for input fields to mimic CuriousTrio */
+input[type="text"] {
+    font-size: 12px; /* Font size for the input */
+    color: #000; /* Text color for the input */
+    background-color: #fff; /* Background color */
+    border: none;
+    border-bottom: 1px solid #000; /* Solid line on the bottom */
+    padding: 10px; /* Padding inside the input */
+    width: 100%; /* Full width of its parent */
+    box-sizing: border-box; /* Padding and border included in dimensions */
+}
+
+/* Styling for the search button */
+button {
+    font-size: 12px;
+    color: #fff; /* White text */
+    background-color: #000; /* Black background */
+    border: 2px solid #000; /* Solid border around the button */
+    padding: 8px 12px; /* Padding inside the button */
+    margin-top: 10px; /* Space above the button */
+    width: 60%; /* Relative width to the form */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s, color 0.3s; /* Smooth transition for hover effect */
+}
+
+button:hover {
+    background-color: #444; /* Darken background on hover */
+    color: #ddd; /* Lighten text on hover */
+}

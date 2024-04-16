@@ -5,13 +5,13 @@ function HomePage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
-  const [searchAttempted, setSearchAttempted] = useState(false);  // New state to track if a search has been made
+  const [searchAttempted, setSearchAttempted] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    setSearchAttempted(true);  // Set that a search has been attempted
+    setSearchAttempted(true);
 
     try {
       const response = await fetch('/api/search', {
@@ -32,7 +32,7 @@ function HomePage() {
         setResults([]);
       } else {
         setResults(data.search_results);
-        setError('');  // Clear any errors if successful
+        setError('');
       }
     } catch (err) {
       console.error('Fetch error:', err);
@@ -43,28 +43,28 @@ function HomePage() {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSearch} style={{ marginBottom: "20px" }}>
+    <div className="container">
+      <form onSubmit={handleSearch} className="search-form">
         <input
           type="text"
+          className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="What are we looking for today?"
-          style={{ marginRight: "10px", padding: "10px" }}
         />
-        <button type="submit" style={{ padding: "10px" }}>Search</button>
+        <button type="submit" className="search-button">Search</button>
       </form>
       {loading && <p>Loading...</p>}
       {error && <p>Error: {error}</p>}
       <div id="searchResults">
         {results.length > 0 ? (
           results.map((item) => (
-            <div key={item.asin} style={{ marginBottom: "20px", borderBottom: "1px solid #ccc", paddingBottom: "10px" }}>
+            <div key={item.asin} className="result-item">
               <h2>{item.title}</h2>
               <p>Brand: {item.brand}</p>
               <p>Rating: {item.rating} ({item.ratings_total} reviews)</p>
               {item.image && (
-                <img src={item.image} alt={item.title} style={{ maxWidth: "100px", marginBottom: "10px" }} />
+                <img src={item.image} alt={item.title} />
               )}
               <a href={item.link} target="_blank" rel="noreferrer">View Product</a>
               <p>Price: {item.price.raw}</p>
