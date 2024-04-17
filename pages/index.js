@@ -43,7 +43,7 @@ function HomePage() {
   };
 
   return (
-    <div className="container">
+    <div>
       <form onSubmit={handleSearch} className="search-form">
         <input
           type="text"
@@ -54,25 +54,27 @@ function HomePage() {
         />
         <button type="submit" className="search-button">Search</button>
       </form>
-      {loading && <p>Loading...</p>}
-      {error && <p>Error: {error}</p>}
-      <div id="searchResults">
-        {results.length > 0 ? (
-          results.map((item) => (
-            <div key={item.asin} className="result-item">
-              <h2>{item.title}</h2>
-              <p>Brand: {item.brand}</p>
-              <p>Rating: {item.rating} ({item.ratings_total} reviews)</p>
-              {item.image && (
-                <img src={item.image} alt={item.title} />
-              )}
-              <a href={item.link} target="_blank" rel="noreferrer">View Product</a>
-              <p>Price: {item.price.raw}</p>
-            </div>
-          ))
-        ) : (
-          searchAttempted && !loading && <p>No results found. Try another search.</p>
-        )}
+      <div className="container">
+        {loading && <p>Loading...</p>}
+        {error && <p>Error: {error}</p>}
+        <div id="searchResults">
+          {results.length > 0 ? (
+            results.map((item) => (
+              <div key={item.asin} className="result-item">
+                <h2>{item.title}</h2>
+                <p>Brand: {item.brand}</p>
+                <p>Rating: {item.rating} ({item.ratings_total} reviews)</p>
+                {item.image && (
+                  <img src={item.image} alt={item.title} />
+                )}
+                <a href={item.link} target="_blank" rel="noreferrer">View Product</a>
+                <p>Price: {item.price.raw}</p>
+              </div>
+            ))
+          ) : (
+            searchAttempted && !loading && <p>No results found. Try another search.</p>
+          )}
+        </div>
       </div>
     </div>
   );
