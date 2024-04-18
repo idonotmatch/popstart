@@ -70,7 +70,7 @@ function HomePage() {
                   <img src={item.image} alt={item.title} />
                 )}
                 <a href={item.link} target="_blank" rel="noreferrer">View Product</a>
-                <p>Price: {item.price.raw}</p>
+                <p>Price: {item.price?.raw ?? 'not available'}</p>
               </div>
             ))
           ) : (
