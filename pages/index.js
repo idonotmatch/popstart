@@ -42,9 +42,11 @@ function HomePage() {
     }
   };
 
+  const searchFormClass = results.length > 0 ? 'search-top' : 'search-center';
+
   return (
     <div>
-      <form onSubmit={handleSearch} className="search-form">
+      <form onSubmit={handleSearch} className={`search-form ${searchFormClass}`}>
         <input
           type="text"
           className="search-input"
@@ -52,7 +54,7 @@ function HomePage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="What are we looking for today?"
         />
-        <button type="submit" className="search-button">Search</button>
+        <button type="submit" className="search-button">let's go.</button>
       </form>
       <div className="container">
         {loading && <p>Loading...</p>}
