@@ -4,8 +4,8 @@
   ],
   "functions": {
     "pages/api/**/*.js": {
-      "memory": 2048,
-      "maxDuration": 20
+      "memory": 1024,
+      "maxDuration": 30
     }
   }
 }
