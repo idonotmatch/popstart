@@ -45,38 +45,36 @@ function HomePage() {
   const searchFormClass = results.length > 0 ? 'search-top' : 'search-center';
 
   return (
-    <div>
-      <form onSubmit={handleSearch} className={`search-form ${searchFormClass}`}>
+    <div className="container">
+      <form onSubmit={handleSearch} className="search-form">
         <input
           type="text"
           className="search-input"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="start here"
+          placeholder="what are we looking for today?"
         />
         <button type="submit" className="search-button">let's go.</button>
       </form>
-      <div className="container">
-        {loading && <p>Loading...</p>}
+      <div id="searchResults">
+        {loading && <p>loading...</p>}
         {error && <p>Error: {error}</p>}
-        <div id="searchResults">
-          {results.length > 0 ? (
-            results.map((item) => (
-              <div key={item.asin} className="result-item">
-                <h2>{item.title}</h2>
-                <p>Brand: {item.brand}</p>
-                <p>Rating: {item.rating} ({item.ratings_total} reviews)</p>
-                {item.image && (
-                  <img src={item.image} alt={item.title} />
-                )}
-                <a href={item.link} target="_blank" rel="noreferrer">View Product</a>
-                <p>Price: {item.price?.raw ?? 'not available'}</p>
-              </div>
-            ))
-          ) : (
-            searchAttempted && !loading && <p>No results found. Try another search.</p>
-          )}
-        </div>
+        {results.length > 0 ? (
+          results.map((item) => (
+            <div key={item.asin} className="result-item">
+              <h2>{item.title}</h2>
+              <p>Brand: {item.brand}</p>
+              <p>Rating: {item.rating} ({item.ratings_total} reviews)</p>
+              {item.image && (
+                <img src={item.image} alt={item.title} />
+              )}
+              <a href={item.link} target="_blank" rel="noreferrer">view product</a>
+              <p>Price: {item.price?.raw ?? 'not available'}</p>
+            </div>
+          ))
+        ) : (
+          searchAttempted && !loading && <p>No results found. Try another search.</p>
+        )}
       </div>
     </div>
   );

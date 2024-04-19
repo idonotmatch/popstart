@@ -4,31 +4,29 @@
     box-sizing: border-box; /* Apply box-sizing to all elements */
     margin: 0; /* Reset margins for all elements */
     padding: 0; /* Reset padding for all elements */
-    font-family: 'Anonymous Pro', monospace; /* Ensure font family is consistent */
+    font-family: 'Open Sans', monospace; /* Ensure font family is consistent */
 }
 
 html, body {
-    height: auto;         /* Changed from 100% to auto to ensure natural page flow */
+    height: 100%;         /* Ensure the full height is available */
     margin: 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    overflow-x: hidden;   /* Prevent horizontal overflow */
-    overflow-y: visible;  /* Allow vertical overflow */
+    align-items: stretch; /* Change from center to stretch for full width */
 }
 
+
 .container {
-    margin-top: 20px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Centers vertically in the container */
-    align-items: center;    /* Centers horizontally in the container */
-    height: 100vh;          /* Takes full height of the viewport */
-    width: 100%;            /* Takes full width of the viewport */
-    margin: auto;         /* Ensures it is centered horizontally */
-    text-align: center;     /* Aligns text in the center */
+    align-items: center;    /* This ensures that all child elements are centered horizontally */
+    justify-content: flex-start; /* Adjust based on your design preference */
+    width: 100%;          /* Full width of the viewport */
+    min-height: 100vh;    /* Minimum height is the full viewport height */
+    margin: 0 auto;       /* Centers container */
+    padding: 20px;        /* Optional padding for inner spacing */
+    box-sizing: border-box; /* Includes padding in width/height calculations */
 }
 
 header {
@@ -38,39 +36,35 @@ header {
 }
 
 .search-form {
-    width: 100%;            /* Full width to accommodate the input and button */
-    max-width: 600px;       /* Maximum width of the form */
-    margin-top: 20px;
-    display: flex;          /* Enables flexbox */
-    flex-direction: column; /* Stacks the elements vertically */
-    justify-content: center;/* Centers the items vertically */
-    align-items: center;    /* Centers the items horizontally */
+    width: 100%;           /* Full width to ensure it takes the container width */
+    max-width: 600px;      /* Limits the width for better aesthetics */
+    display: flex;         /* Ensures the use of Flexbox */
+    flex-direction: row;   /* Align elements in a row */
+    justify-content: center; /* Centers items horizontally within the form */
+    align-items: center;   /* Align items vertically */
+    margin: 20px auto;     /* Top and bottom margin for spacing, auto for horizontal centering */
 }
 
-
 .search-input {
-    font-size: 18px; /* Adjust font size as needed */
-    width: 100%; /* Full width */
-    height: 50px; /* Fixed height */
-    padding: 10px 15px; /* Padding inside the input box */
+    font-size: 14px; /* Appropriate font size for visibility */
+    width: 75%; /* Adjust if necessary to give more space to the button */
+    height: 50px; /* Fixed height for uniformity */
+    padding: 10px 15px; /* Comfortable padding inside the input */
     border: none;
-    border-bottom: 2px solid #000; /* Solid bottom border */
-    margin-bottom: 20px; /* Space below the input field */
-    box-sizing: border-box; /* Include padding in the height calculation */
+    border-right: 2px solid #000; /* Visual separation if desired */
+    margin-right: 10px; /* Space between input and button */
 }
 
 .search-button {
-    font-size: 12px; /* Set font size for button */
-    padding: 10px 20px; /* Padding inside the button */
+    font-size: 10px; /* Clear and visible font size */
+    width: 20%; /* Adjust based on total width of the form */
+    height: 50px; /* Matches the input height */
+    padding: 12px 20px; /* Padding for a better touch experience */
     background-color: #000;
     color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-    width: 45%; /* Width relative to its container */
-    max-width: 200px; /* Maximum width it can expand to */
-    box-sizing: border-box; /* Include padding in the width calculation */
 }
 
 .search-button:hover {
@@ -78,35 +72,69 @@ header {
     color: #ddd;
 }
 
+
 #searchResults {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    display: flex;
+    flex-direction: column; /* Ensures items are stacked vertically */
     gap: 20px;
     padding: 10px;
 }
 
+
 .result-item {
-    border: 1px solid #ddd;
+    display: flex;
+    flex-direction: row; /* Aligns child elements horizontally */
+    align-items: center; /* Vertically center aligns all children */
+    justify-content: space-between; /* Spreads out items across the horizontal space */
+    min-height: 20px; /* Minimum height, can adjust based on your design needs */
     padding: 10px;
     border-radius: 8px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: #fff;
+    overflow: hidden; /* Keeps all content within the borders */
 }
 
 .result-item img {
-    width: 100%;
-    aspect-ratio: 1 / 1; /* Maintains a square aspect ratio */
-    object-fit: contain; /* Ensures the image covers the area without being cut off */
+    width: 100px;  /* Fixed width */
+    height: 100px; /* Fixed height */
+    object-fit: cover;
+    flex: 0 0 auto; /* Do not grow, do not shrink, and auto basis */
+}
+
+.result-item .details {
+    flex-grow: 1; /* Takes the remaining space */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-right: 20px; /* Optional, for spacing between this and price */
+}
+
+.result-item .details h2,
+.result-item .details p {
+    margin: 5px 0; /* Margins to space out text inside details */
+}
+
+.result-item .price {
+    flex: 0 1 auto; /* Do not grow, can shrink, auto basis based on content size */
+    white-space: nowrap; /* Ensures the text does not wrap */
 }
 
 @media (max-width: 768px) {
-    #searchResults {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 10px;
+    .result-item {
+        flex-direction: column; /* Stack elements vertically on smaller screens */
+        align-items: start; /* Aligns items to the start of the item block */
+        min-height: auto; /* Removes fixed height constraint */
     }
+
     .result-item img {
-        aspect-ratio: 4 / 3; /* Adjusts to a more rectangular shape on smaller screens */
+        width: 100%; /* Full width images on smaller screens */
+        height: auto; /* Maintain aspect ratio */
+    }
+
+    .result-item .details,
+    .result-item .price {
+        flex-grow: 1;
+        width: 100%; /* Full width for details and price */
     }
 }
 
