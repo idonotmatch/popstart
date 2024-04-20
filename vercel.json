@@ -1,7 +1,7 @@
 {
-  "rewrites": [
-    { "source": "/popstart/:path*", "destination": "/:path*" }
-  ],
+  // "rewrites": [
+  //   { "source": "/popstart/:path*", "destination": "/:path*" }
+  // ],
   "functions": {
     "pages/api/**/*.js": {
       "memory": 1024,
