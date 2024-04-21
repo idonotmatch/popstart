@@ -21,7 +21,7 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;    /* This ensures that all child elements are centered horizontally */
-    justify-content: flex-start; /* Adjust based on your design preference */
+    justify-content: center; /* Adjust based on your design preference */
     width: 100%;          /* Full width of the viewport */
     min-height: 100vh;    /* Minimum height is the full viewport height */
     margin: 0 auto;       /* Centers container */
@@ -47,18 +47,19 @@ header {
 
 .search-input {
     font-size: 14px; /* Appropriate font size for visibility */
+    text-align: center;
     width: 75%; /* Adjust if necessary to give more space to the button */
-    height: 50px; /* Fixed height for uniformity */
+    height: 40px; /* Fixed height for uniformity */
     padding: 10px 15px; /* Comfortable padding inside the input */
     border: none;
-    border-right: 2px solid #000; /* Visual separation if desired */
+    border-bottom: 0.5px solid #000;
     margin-right: 10px; /* Space between input and button */
 }
 
 .search-button {
-    font-size: 10px; /* Clear and visible font size */
-    width: 20%; /* Adjust based on total width of the form */
-    height: 50px; /* Matches the input height */
+    font-size: 12px; /* Clear and visible font size */
+    width: 15%; /* Adjust based on total width of the form */
+    height: 40px; /* Matches the input height */
     padding: 12px 20px; /* Padding for a better touch experience */
     background-color: #000;
     color: #fff;
