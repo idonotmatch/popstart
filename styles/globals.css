@@ -12,7 +12,7 @@ html, body {
     margin: 0;
     padding: 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: stretch; /* Change from center to stretch for full width */
 }
 
@@ -77,52 +77,60 @@ header {
 #searchResults {
     display: flex;
     flex-direction: column; /* Ensures items are stacked vertically */
-    gap: 20px;
-    padding: 10px;
+    gap: 40px;
+    padding: 20px;
 }
 
 
 .result-item {
     display: flex;
-    flex-direction: row; /* Aligns child elements horizontally */
-    align-items: center; /* Vertically center aligns all children */
-    justify-content: space-between; /* Spreads out items across the horizontal space */
-    min-height: 20px; /* Minimum height, can adjust based on your design needs */
+    flex-direction: row;
+    align-items: center;
     padding: 10px;
-    border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px; /* Adds space between each item */
     background: #fff;
-    overflow: hidden; /* Keeps all content within the borders */
+    overflow: hidden;
+    max-height: 200px;
 }
 
-.result-item img {
-    width: 100px;  /* Fixed width */
-    height: 100px; /* Fixed height */
-    object-fit: cover;
-    flex: 0 0 auto; /* Do not grow, do not shrink, and auto basis */
-}
-
-.result-item .details {
-    flex-grow: 1; /* Takes the remaining space */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    margin-right: 20px; /* Optional, for spacing between this and price */
-}
-
-.result-item .details h2,
-.result-item .details p {
-    margin: 5px 0; /* Margins to space out text inside details */
-}
-
+.result-item .title,
+.result-item .brand,
+.result-item .rating,
+.result-item .image,
+.result-item .link,
 .result-item .price {
-    flex: 0 1 auto; /* Do not grow, can shrink, auto basis based on content size */
-    white-space: nowrap; /* Ensures the text does not wrap */
+    margin: 5px 0; /* Spacing around each element */
+}
+
+
+.result-item .image {
+    width: auto; /* Full width of the container */
+    display: flex;
+    justify-content: center; /* Center image horizontally */
+}
+
+.result-item .image img {
+    max-width: 100%; /* Ensures image is not bigger than its container */
+    height: auto;
+}
+
+.result-item .link, .result-item .price {
+    align-self: stretch; /* Stretches link and price to take full width of the container */
+    text-align: center; /* Centers text within the link and price */
+    /* background-color: #f4f4f4; Gives a background color for visibility */
+}
+
+.result-item .rating {
+    /* background-color: #e8e8e8; Light grey background for ratings */
+    width: 100%; /* Full width */
+    text-align: center; /* Center the rating text */
 }
 
 @media (max-width: 768px) {
     .result-item {
-        flex-direction: column; /* Stack elements vertically on smaller screens */
+        flex-direction: row; /* Stack elements vertically on smaller screens */
         align-items: start; /* Aligns items to the start of the item block */
         min-height: auto; /* Removes fixed height constraint */
     }

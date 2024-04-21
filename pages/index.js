@@ -57,19 +57,17 @@ function HomePage() {
         <button type="submit" className="search-button">let's go.</button>
       </form>
       <div id="searchResults">
-        {loading && <p>loading...</p>}
+        {loading && <p>searching...</p>}
         {error && <p>Error: {error}</p>}
         {results.length > 0 ? (
           results.map((item) => (
             <div key={item.asin} className="result-item">
-              <h2>{item.title}</h2>
-              <p>Brand: {item.brand}</p>
-              <p>Rating: {item.rating} ({item.ratings_total} reviews)</p>
-              {item.image && (
-                <img src={item.image} alt={item.title} />
-              )}
-              <a href={item.link} target="_blank" rel="noreferrer">view product</a>
-              <p>Price: {item.price?.raw ?? 'not available'}</p>
+              <div className="image"><img src={item.image} alt={item.title} /></div>
+              <div className="brand"><p>Brand: {item.brand?.slice(0, 20)}{item.brand?.length > 20 ? '...' : ''}</p></div>
+              <div className="title"><p>{item.title?.slice(0, 40)}{item.title?.length > 40 ? '...' : ''}</p></div>
+              <div className="rating"><p>Rating: {item.rating} ({item.ratings_total} reviews)</p></div>
+              <div className="link"><a href={item.link} target="_blank" rel="noreferrer">Amazon link</a></div>
+              <div className="price"><p>Price: {item.price?.raw ?? 'Not available'}</p></div>
             </div>
           ))
         ) : (
