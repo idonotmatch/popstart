@@ -54,10 +54,10 @@ function HomePage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="what are we looking for today?"
         />
-        <button type="submit" className="search-button">let's go.</button>
+        <button type="submit" className="search-button">go.</button>
       </form>
       <div id="searchResults">
-        {loading && <p>searching...</p>}
+        {loading && <p>searching</p>}
         {error && <p>Error: {error}</p>}
         {results.length > 0 ? (
           results.map((item) => (
