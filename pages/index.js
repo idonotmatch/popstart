@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer'
 
@@ -8,6 +8,10 @@ function HomePage() {
   const [results, setResults] = useState([]);
   const [error, setError] = useState('');
   const [searchAttempted, setSearchAttempted] = useState(false);
+
+  useEffect(() => {
+    document.title = "Curious Trio - Search";
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
