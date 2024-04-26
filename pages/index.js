@@ -27,7 +27,7 @@ function HomePage() {
       });
 
       if (!response.ok) {
-        setError(`Error: ${response.statusText}`);
+        setError(`${response.statusText}`);
         setResults([]);
         return;
       }
