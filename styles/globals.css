@@ -2,15 +2,13 @@
 
 * {
     box-sizing: border-box; /* Apply box-sizing to all elements */
-    margin: 0; /* Reset margins for all elements */
+    /* margin: 0; Reset margins for all elements */
     padding: 0; /* Reset padding for all elements */
     font-family: 'Open Sans', monospace; /* Ensure font family is consistent */
 }
 
 html, body {
     height: 100%;         /* Ensure the full height is available */
-    margin: 0;
-    padding: 0;
     display: flex;
     flex-direction: column;
     align-items: stretch; /* Change from center to stretch for full width */
@@ -27,12 +25,6 @@ html, body {
     margin: 0 auto;       /* Centers container */
     padding: 20px;        /* Optional padding for inner spacing */
     box-sizing: border-box; /* Includes padding in width/height calculations */
-}
-
-header {
-    width: 100%; /* Full width */
-    text-align: center;
-    margin-bottom: 20px;
 }
 
 .search-form {
@@ -169,14 +161,11 @@ header {
 }
 
 .global-header {
-    width: 100%;
+    font-size: 14px;
     font-weight: bold;
+    width: 100%;
     text-decoration: underline;
     padding: 10px 20px;
-    display: flex; /* This ensures that items in the header are laid out horizontally and spaced between */
-    justify-content: space-between; /* This places the logo on one end and the navigation/menu on the other end */
-    align-items: center; /* This vertically centers the items in the header */
-    /* box-shadow: 0 1px 1px #000; */
     background-color: #fff;
     position: fixed; /* Keeps the header at the top of the viewport */
     top: 0;
@@ -201,7 +190,6 @@ header {
     color: #333;
     font-size: 12px;
     margin-left: 10px;
-
 }
 
 .footer-nav a:hover {
