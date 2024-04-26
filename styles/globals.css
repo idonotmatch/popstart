@@ -171,30 +171,17 @@ header {
 .global-header {
     width: 100%;
     font-weight: bold;
+    text-decoration: underline;
     padding: 10px 20px;
     display: flex; /* This ensures that items in the header are laid out horizontally and spaced between */
     justify-content: space-between; /* This places the logo on one end and the navigation/menu on the other end */
     align-items: center; /* This vertically centers the items in the header */
-    box-shadow: 0 1px 1px #000;
+    /* box-shadow: 0 1px 1px #000; */
     background-color: #fff;
     position: fixed; /* Keeps the header at the top of the viewport */
     top: 0;
     left: 0;
     z-index: 1000; /* Keeps the header above other content */
-}
-
-.header-nav a {
-    text-decoration: none; /* Removes underline by default */
-    color: #333; /* Dark grey for readability */
-    font-size: 14px; /* Smaller font size for navigational links */
-    font-weight: bold;
-    margin: 0 15px; /* Adds horizontal spacing between links */
-    padding: 10px; /* Easier to click on touch devices */
-}
-
-.header-nav a:hover {
-    color: #000; /* Changes color on hover for better interaction feedback */
-    text-decoration: underline; /* Adds an underline on hover to indicate it's clickable */
 }
 
 .global-footer {
