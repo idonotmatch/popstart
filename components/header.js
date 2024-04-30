@@ -6,7 +6,7 @@ const Header = () => {
   return (
     <header className="global-header">
       <div className="logo">
-      <img src="/images/trio.png" alt="Curious Trio logo" style="height: 50px" />
+      <img src="/images/trio.png" alt="Curious Trio logo" />
       </div>
     </header>
   );
