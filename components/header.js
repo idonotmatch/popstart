@@ -6,8 +6,7 @@ const Header = () => {
   return (
     <header className="global-header">
       <div className="logo">
-        {/* Using a <span> to display the logo text */}
-        <span>Curious Trio</span>
+      <img src="/images/trio.png" alt="Curious Trio logo" style="height: 50px" />
       </div>
     </header>
   );
