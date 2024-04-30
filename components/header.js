@@ -6,9 +6,7 @@ const Header = () => {
   return (
     <header className="global-header">
       <div className="logo">
-        <a href="/">
-          <img src="/styles/CT_TempLogo.png" alt="Curious Trio logo" />
-        </a>
+      <img src="/public/images/trio.png" alt="Curious Trio logo" style="height: 50px" />
       </div>
     </header>
   );
