@@ -134,6 +134,17 @@ html, body {
     white-space: nowrap; /* Ensures the text does not wrap */
 }
 
+.result-item .link {
+    padding: 0; /* Remove padding if unnecessary */
+    margin: 0; /* Remove default margin to eliminate extra space */
+    font-size: 12px; /* Maintain consistent font size */
+}
+
+.result-item .link a {
+    display: inline-block; /* This will treat the link more like a block element, providing better control over padding and margins */
+}
+
+
 @media (max-width: 768px) {
     .result-item {
         flex-direction: column; /* Stack elements vertically on smaller screens */
