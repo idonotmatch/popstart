@@ -60,7 +60,7 @@ function HomePage() {
             className="search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="what are we looking for today?"
+            placeholder="start here."
           />
           <button type="submit" className="search-button">go.</button>
         </form>

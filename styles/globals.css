@@ -52,6 +52,7 @@ html, body {
 .search-button {
     font-size: 12px; /* Clear and visible font size */
     width: 15%; /* Adjust based on total width of the form */
+    min-width: 60px;
     height: 40px; /* Matches the input height */
     padding: 12px 20px; /* Padding for a better touch experience */
     background-color: #000;
