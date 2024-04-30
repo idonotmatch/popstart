@@ -71,7 +71,7 @@ function HomePage() {
             results.map((item) => (
               <div key={item.asin} className="result-item">
                 <div className="image"><img src={item.image} alt={item.title} /></div>
-                <div className="brand"><p>Brand: {item.brand?.slice(0, 40)}{item.brand?.length > 40 ? '...' : ''}</p></div>
+                <div className="brand"><p>Brand: {item.brand?.slice(0, 40) ?? 'Not Found'}{item.brand?.length > 40 ? '...' : ''}</p></div>
                 <div className="title">
                   <p
                     title={item.title}
@@ -79,8 +79,8 @@ function HomePage() {
                   >{item.title?.slice(0, 80)}{item.title?.length > 80 ? '...' : ''}</p>
                 </div>
                 <div className="rating"><p>Rating: {item.rating} ({item.ratings_total} reviews)</p></div>
+                <div className="price"><p>Price: {item.price?.raw ?? 'Not Found'}</p></div>
                 <div className="link"><a href={item.link} target="_blank" rel="noreferrer">Amazon link</a></div>
-                <div className="price"><p>Price: {item.price?.raw ?? 'Not available'}</p></div>
               </div>
             ))
           ) : (

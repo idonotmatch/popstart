@@ -2,9 +2,9 @@
 
 * {
     box-sizing: border-box; /* Apply box-sizing to all elements */
-    /* margin: 0; Reset margins for all elements */
     padding: 0; /* Reset padding for all elements */
     font-family: 'Open Sans', monospace; /* Ensure font family is consistent */
+    margin: 5px; 
 }
 
 html, body {
@@ -23,12 +23,13 @@ html, body {
     width: 100%;          /* Full width of the viewport */
     min-height: 100vh;    /* Minimum height is the full viewport height */
     margin: 0 auto;       /* Centers container */
-    padding: 20px;        /* Optional padding for inner spacing */
+    padding: 10px;        /* Optional padding for inner spacing */
     box-sizing: border-box; /* Includes padding in width/height calculations */
 }
 
 .search-form {
-    padding: 20px;
+    padding: 10px;
+    padding-top: 20px;
     width: 100%;           /* Full width to ensure it takes the container width */
     max-width: 600px;      /* Limits the width for better aesthetics */
     display: flex;         /* Ensures the use of Flexbox */
@@ -69,9 +70,12 @@ html, body {
 
 
 #searchResults {
+    width: 100%;
+    font-size: 12px;
     display: flex;
+    text-align: left;
     flex-direction: column; /* Ensures items are stacked vertically */
-    gap: 20px;
+    gap: 10px;
     padding: 10px;
 }
 
@@ -80,6 +84,7 @@ html, body {
     display: flex;
     /* flex-direction: row; */
     align-items: center; 
+    margin: 10px 0;
     min-height: 20px; 
     padding: 20px;
     border-radius: 4px;
@@ -106,12 +111,12 @@ html, body {
 }
 
 .result-item .title {
-    width: 40%;
+    width: 100%;
     font-weight: bold;
     word-wrap: break-word;
     font-size: 14px;
-    padding-left: 20px;
-    padding-right: 20px;
+    /* padding-left: 20px;
+    padding-right: 20px; */
 }
 
 .result-item .brand, .result-item .rating, .result-item .price, .result-item .link{
