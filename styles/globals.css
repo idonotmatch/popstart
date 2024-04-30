@@ -192,6 +192,11 @@ html, body {
     z-index: 1000; /* Keeps the header above other content */
 }
 
+.global-header .logo img {
+    height: 50px;
+    width: auto;
+}
+
 .global-footer {
     width: 100%;
     padding: 10px;
