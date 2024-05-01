@@ -75,7 +75,7 @@ html, body {
     width: 100%;
     font-size: 12px;
     display: flex;
-    text-align: left;
+    text-align: center;
     flex-direction: column; /* Ensures items are stacked vertically */
     gap: 10px;
     padding: 10px;
