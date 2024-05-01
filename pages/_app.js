@@ -18,7 +18,7 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     // Initialize GA4 with the ID from environment variables
-    ReactGA4.initialize(process.env.GA_MEASUREMENT_ID);
+    ReactGA4.initialize(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
 
     const handleRouteChange = (url) => {
       ReactGA4.send({ hitType: "pageview", page: url });
