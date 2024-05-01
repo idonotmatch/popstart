@@ -3,14 +3,12 @@ import { ApolloProvider } from '@apollo/client';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import ReactGA4 from 'react-ga4';
 import { useRouter } from 'next/router';
-import '../styles/globals.css'; // Ensure this path correctly points to your global styles file.
-
-const GA_MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Replace with your Measurement ID
+import '../styles/globals.css';
 
 // Setup Apollo Client
 const client = new ApolloClient({
   link: new HttpLink({
-    uri: '/api/graphql', // Make sure this matches the Next.js API route you've set for your GraphQL server.
+    uri: '/api/graphql',
   }),
   cache: new InMemoryCache(),
 });
@@ -19,7 +17,8 @@ function MyApp({ Component, pageProps }) {
   const router = useRouter();
 
   useEffect(() => {
-    ReactGA4.initialize(GA_MEASUREMENT_ID);
+    // Initialize GA4 with the ID from environment variables
+    ReactGA4.initialize(process.env.GA_MEASUREMENT_ID);
 
     const handleRouteChange = (url) => {
       ReactGA4.send({ hitType: "pageview", page: url });
