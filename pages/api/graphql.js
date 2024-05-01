@@ -45,7 +45,9 @@ const resolvers = {
         page: "1",
         max_page: "1",
         output: "json",
-        include_html: "false"
+        include_html: "false",
+        customer_location: "us"
+
       };
 
       try {
