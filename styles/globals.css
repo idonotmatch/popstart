@@ -4,15 +4,17 @@
     box-sizing: border-box; /* Apply box-sizing to all elements */
     padding: 0; /* Reset padding for all elements */
     font-family: 'Open Sans', monospace; /* Ensure font family is consistent */
-    margin: 5px; 
+    margin: 0; 
 }
 
 html, body {
     height: 100%;         /* Ensure the full height is available */
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    position: relative; /* Change from center to stretch for full width */
+    margin: 0;
+    padding: 0;
 }
 
 
@@ -23,7 +25,7 @@ html, body {
     align-items: center;    /* This ensures that all child elements are centered horizontally */
     justify-content: center; /* Adjust based on your design preference */
     width: 100%;          /* Full width of the viewport */
-    min-height: 100vh;    /* Minimum height is the full viewport height */
+    min-height: 80vh; 
     margin: 0 auto;       /* Centers container */
     padding: 10px;        /* Optional padding for inner spacing */
     box-sizing: border-box; /* Includes padding in width/height calculations */
@@ -195,27 +197,26 @@ html, body {
 .global-header .logo img {
     height: 60px;
     width: auto;
+    margin: 5px;
 }
 
 .global-footer {
+    font-size: 8px;
     width: 100%;
     padding: 10px;
     text-align: center;
-    /* position: fixed; */
-    font-size: 8px;
+    position: absolute; /* Moves the footer to the bottom of the page */
     bottom: 0;
     left: 0;
     background-color: #fff;
-    z-index: 1000;
 }
 
 .footer-nav a {
     text-decoration: underline;
     color: #333;
     font-size: 12px;
-    margin-left: 10px;
+    margin: 10px;
 }
 
-.footer-nav a:hover {
-    color: #000;
-}
+
+
