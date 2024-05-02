@@ -9,14 +9,38 @@ function HomePage() {
   const [loading, setLoading] = useState(false);  // Might not be needed here anymore.
   const [results, setResults] = useState([]);  // Might not be needed here anymore.
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
   const [searchAttempted, setSearchAttempted] = useState(false);
 
   useEffect(() => {
     document.title = "Curious Trio - Search";
-  }, []);
+    if (searchTerm) {
+      fetchResults();
+    }
+  }, [searchTerm, page]);
 
+  const fetchResults = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/search?term=${encodeURIComponent(searchTerm)}&page=${page}`, {
+        method: 'GET', // Consider changing to POST if your API requires it
+      });
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      setResults(page === 1 ? data.results : [...results, ...data.results]);
+      setHasMore(data.results.length > 0);
+      setError('');
+    } catch (error) {
+      setError(error.message);
+      setResults([]);
+      setHasMore(false);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleSearch = (e) => {
     e.preventDefault();
+    setPage(1);
     if (searchTerm.trim()) {
       router.push(`/search/${encodeURIComponent(searchTerm)}`);
     } else {
