@@ -1,5 +1,3 @@
-/* Existing CSS */
-
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
 * {
@@ -12,11 +10,7 @@
 html, body {
     height: 100%;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    margin: 0;
-    padding: 0;
+    overflow: hidden; /* Prevent scrolling of the full page */
 }
 
 .container {
@@ -26,10 +20,10 @@ html, body {
     align-items: center;
     justify-content: center;
     width: 100%;
-    min-height: 80vh;
+    min-height: 100vh; /* Ensure the container takes full viewport height */
+    overflow: hidden; /* Prevent the container from scrolling */
     margin: 0 auto;
     padding: 10px;
-    padding-bottom: 60px; /* Add padding at the bottom */
     box-sizing: border-box;
 }
 
@@ -78,10 +72,10 @@ html, body {
     width: 100%;
     font-size: 12px;
     display: flex;
-    text-align: center;
     flex-direction: column;
     gap: 10px;
     padding: 10px;
+    overflow: hidden; /* Prevent the search results container from scrolling */
 }
 
 .result-item {
@@ -118,6 +112,9 @@ html, body {
     text-align: left;
     font-weight: bold;
     word-wrap: break-word;
+    min-height: 3em; /* Assuming a line height of 1.5em, adjust if needed */
+    line-height: 1.5em;
+    overflow: hidden;
 }
 
 .result-item .brand {
@@ -215,6 +212,7 @@ html, body {
 button {
     margin-right: 10px;
     padding: 10px 20px;
+    border-radius: 4px;
     cursor: pointer;
     border: none;
 }
@@ -233,12 +231,15 @@ button:not(.active) {
     display: flex;
     justify-content: space-between;
     gap: 20px;
+    width: 100%;
+    height: calc(100vh - 200px); /* Adjust this value to make space for the header and footer */
+    overflow: hidden;
 }
 
 .column {
     flex: 1;
     overflow-y: auto;
-    max-height: 80vh;
+    max-height: 100%;
 }
 
 .rainforest-results {
@@ -253,20 +254,4 @@ button:not(.active) {
     .results-container {
         flex-direction: column;
     }
-}
-
-.load-more-button {
-    font-size: 14px;
-    padding: 10px 20px;
-    margin: 20px 0;
-    background-color: #000;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.load-more-button:hover {
-    background-color: #333;
 }

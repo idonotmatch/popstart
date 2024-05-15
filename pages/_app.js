@@ -3,7 +3,8 @@ import { ApolloProvider } from '@apollo/client';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import ReactGA4 from 'react-ga4';
 import { useRouter } from 'next/router';
-import '../styles/globals.css'; // Move CSS import here
+import '../styles/globals.css';
+import { SearchProvider } from '../context/SearchContext'; // Import SearchProvider
 
 // Setup Apollo Client
 const client = new ApolloClient({
@@ -34,7 +35,9 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <ApolloProvider client={client}>
-      <Component {...pageProps} />
+      <SearchProvider> {/* Wrap the application with SearchProvider */}
+        <Component {...pageProps} />
+      </SearchProvider>
     </ApolloProvider>
   );
 }

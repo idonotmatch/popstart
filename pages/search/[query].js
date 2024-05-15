@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
 import { useMediaQuery } from 'react-responsive';
+import { useSearch } from '../../context/SearchContext';
 
 function SearchPage() {
   const router = useRouter();
@@ -15,11 +16,20 @@ function SearchPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
-
   const isDesktop = useMediaQuery({ minWidth: 768 });
+
+  const { setSearchResults, getSearchResults } = useSearch();
 
   const fetchResults = useCallback(async () => {
     if (!query) return;
+
+    const cachedResults = getSearchResults(query);
+    if (cachedResults) {
+      setResults(cachedResults);
+      setFilteredResults(cachedResults);
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -33,9 +43,10 @@ function SearchPage() {
 
       console.log('Fetched data:', data);
 
-      setResults(prevResults => (page === 1 ? data.results : [...prevResults, ...data.results]));
+      setResults((prevResults) => (page === 1 ? data.results : [...prevResults, ...data.results]));
       setHasMore(data.results.length > 0);
       setError('');
+      setSearchResults(query, data.results);
     } catch (error) {
       setError(error.message);
       setResults([]);
@@ -43,7 +54,7 @@ function SearchPage() {
     } finally {
       setLoading(false);
     }
-  }, [query, page]);
+  }, [query, page, getSearchResults, setSearchResults]);
 
   useEffect(() => {
     if (query) {
@@ -61,8 +72,8 @@ function SearchPage() {
   };
 
   const filterAndAlternateResults = () => {
-    const amazonResults = results.filter(result => result.link.includes('amazon.com'));
-    const walmartResults = results.filter(result => result.link.includes('walmart.com'));
+    const amazonResults = results.filter((result) => result.link.includes('amazon.com'));
+    const walmartResults = results.filter((result) => result.link.includes('walmart.com'));
 
     if (activeTab === 'all') {
       const alternated = [];
@@ -85,49 +96,29 @@ function SearchPage() {
     filterAndAlternateResults();
   }, [results, activeTab]);
 
-  const formatPrice = (price) => {
-    if (typeof price === 'string') {
-      if (!price.includes('.')) {
-        return `${price}.00`;
-      } else if (price.split('.')[1].length === 1) {
-        return `${price}0`;
-      }
-    }
-    return price;
-  };
-
-  const formatNumber = (number) => {
-    return number.toLocaleString();
-  };
-
   const renderResults = (results) => {
-    return results.map((item, index) => {
-      // Debug log the entire item object
-      console.log('Result item:', item);
-
-      return (
-        <div key={index} className="result-item">
-          <div className="image"><img src={item.image} alt={item.title} /></div>
-          <div className="details">
-            <div className="title">
-              <p
-                title={item.title}
-                className={`${item.title?.length > 80 ? 'tooltip' : ''}`}
-              >{item.title?.slice(0, 80)}{item.title?.length > 80 ? '...' : ''}</p>
-            </div>
-            <div className="brand"><p>Brand: {item.brand ? item.brand.slice(0, 40) : 'Not Found'}{item.brand && item.brand.length > 40 ? '...' : ''}</p></div>
-            <div className="rating"><p>Rating: {item.rating ? item.rating : 'Not Found'} ({item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'No reviews'})</p></div>
-            <div className="price"><p>Price: {item.price ? formatPrice(item.price) : 'Not Found'}</p></div>
-            <div className="link"><a href={item.link} target="_blank" rel="noreferrer">{item.link.includes('amazon.com') ? 'Shop Amazon' : 'Shop Walmart'}</a></div>
+    return results.map((item, index) => (
+      <div key={index} className="result-item">
+        <div className="image"><img src={item.image} alt={item.title} /></div>
+        <div className="details">
+          <div className="title">
+            <p
+              title={item.title}
+              className={`${item.title?.length > 80 ? 'tooltip' : ''}`}
+            >{item.title?.slice(0, 80)}{item.title?.length > 80 ? '...' : ''}</p>
           </div>
+          <div className="brand"><p>Brand: {item.brand ? item.brand.slice(0, 40) : 'Not Found'}{item.brand && item.brand.length > 40 ? '...' : ''}</p></div>
+          <div className="rating"><p>Rating: {item.rating ? item.rating : 'Not Found'} ({item.ratingsTotal ? `${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'}` : 'No reviews'})</p></div>
+          <div className="price"><p>Price: {item.price ? item.price : 'Not Found'}</p></div>
+          <div className="link"><a href={item.link} target="_blank" rel="noreferrer">{item.link.includes('amazon.com') ? 'Shop Amazon' : 'Shop Walmart'}</a></div>
         </div>
-      );
-    });
+      </div>
+    ));
   };
 
   const loadMoreResults = () => {
     if (hasMore && !loading) {
-      setPage(prevPage => prevPage + 1);
+      setPage((prevPage) => prevPage + 1);
     }
   };
 
@@ -159,15 +150,15 @@ function SearchPage() {
           {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
             <div className="results-container">
               <div className="column rainforest-results">
-                {renderResults(filteredResults.filter(result => result.link.includes('amazon.com')))}
-                {!loading && hasMore && (
-                  <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
+                {hasMore && (
+                  <button onClick={loadMoreResults} className="load-more-button">Load More</button>
                 )}
               </div>
               <div className="column bluecart-results">
-                {renderResults(filteredResults.filter(result => result.link.includes('walmart.com')))}
-                {!loading && hasMore && (
-                  <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
+                {hasMore && (
+                  <button onClick={loadMoreResults} className="load-more-button">Load More</button>
                 )}
               </div>
             </div>
