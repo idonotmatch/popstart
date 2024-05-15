@@ -3,7 +3,7 @@ import { ApolloProvider } from '@apollo/client';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import ReactGA4 from 'react-ga4';
 import { useRouter } from 'next/router';
-import '../styles/globals.css';
+import '../styles/globals.css'; // Move CSS import here
 
 // Setup Apollo Client
 const client = new ApolloClient({

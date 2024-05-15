@@ -1,14 +1,16 @@
+/* Existing CSS */
+
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
 
 * {
-    box-sizing: border-box; /* Apply box-sizing to all elements */
-    padding: 0; /* Reset padding for all elements */
-    font-family: 'Open Sans', monospace; /* Ensure font family is consistent */
-    margin: 0; 
+    box-sizing: border-box;
+    padding: 0;
+    font-family: 'Open Sans', monospace;
+    margin: 0;
 }
 
 html, body {
-    height: 100%;         /* Ensure the full height is available */
+    height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -17,49 +19,49 @@ html, body {
     padding: 0;
 }
 
-
 .container {
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center;    /* This ensures that all child elements are centered horizontally */
-    justify-content: center; /* Adjust based on your design preference */
-    width: 100%;          /* Full width of the viewport */
-    min-height: 80vh; 
-    margin: 0 auto;       /* Centers container */
-    padding: 10px;        /* Optional padding for inner spacing */
-    box-sizing: border-box; /* Includes padding in width/height calculations */
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 80vh;
+    margin: 0 auto;
+    padding: 10px;
+    padding-bottom: 60px; /* Add padding at the bottom */
+    box-sizing: border-box;
 }
 
 .search-form {
     padding: 10px;
     padding-top: 20px;
-    width: 100%;           /* Full width to ensure it takes the container width */
-    max-width: 600px;      /* Limits the width for better aesthetics */
-    display: flex;         /* Ensures the use of Flexbox */
-    flex-direction: row;   /* Align elements in a row */
-    justify-content: center; /* Centers items horizontally within the form */
-    align-items: center;   /* Align items vertically */
-    margin: 20px auto;     /* Top and bottom margin for spacing, auto for horizontal centering */
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
 }
 
 .search-input {
-    font-size: 14px; /* Appropriate font size for visibility */
+    font-size: 14px;
     text-align: center;
-    width: 75%; /* Adjust if necessary to give more space to the button */
-    height: 40px; /* Fixed height for uniformity */
-    padding: 10px 15px; /* Comfortable padding inside the input */
+    width: 75%;
+    height: 40px;
+    padding: 10px 15px;
     border: none;
     border-bottom: 0.5px solid #000;
-    margin-right: 10px; /* Space between input and button */
+    margin-right: 10px;
 }
 
 .search-button {
-    font-size: 12px; /* Clear and visible font size */
-    width: 15%; /* Adjust based on total width of the form */
+    font-size: 12px;
+    width: 15%;
     min-width: 60px;
-    height: 40px; /* Matches the input height */
-    padding: 12px 20px; /* Padding for a better touch experience */
+    height: 40px;
+    padding: 12px 20px;
     background-color: #000;
     color: #fff;
     border: none;
@@ -72,115 +74,107 @@ html, body {
     color: #ddd;
 }
 
-
 #searchResults {
     width: 100%;
     font-size: 12px;
     display: flex;
     text-align: center;
-    flex-direction: column; /* Ensures items are stacked vertically */
+    flex-direction: column;
     gap: 10px;
     padding: 10px;
 }
 
-
 .result-item {
     display: flex;
-    /* flex-direction: row; */
-    align-items: center; 
+    flex-direction: column;
     margin: 10px 0;
-    min-height: 20px; 
+    min-height: 20px;
     padding: 20px;
     border-radius: 4px;
     border-top: 0.5px solid rgba(0, 0, 0, 0.1);
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
     background: #fff;
-    overflow: hidden; /* Keeps all content within the borders */
+    overflow: hidden;
 }
 
 .result-item img {
     padding: 10px;
-    width: 160px;  /* Fixed width */
-    height: 160px; /* Fixed height */
+    width: 160px;
+    height: 160px;
     object-fit: scale-down;
-    flex: 0 0 auto; /* Do not grow, do not shrink, and auto basis */
+    flex: 0 0 auto;
 }
 
 .result-item .details {
-    flex-grow: 1; /* Takes the remaining space */
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
     justify-content: center;
-    margin-right: 20px; /* Optional, for spacing between this and price */
+    margin-right: 20px;
 }
 
 .result-item .title {
-    width: 100%;
-    font-weight: bold;
-    word-wrap: break-word;
     font-size: 14px;
     text-align: left;
-    /* padding-left: 20px;
-    padding-right: 20px; */
+    font-weight: bold;
+    word-wrap: break-word;
 }
 
-.result-item .brand, .result-item .rating, .result-item .price, .result-item .link{
+.result-item .brand {
+    padding-bottom: 10px;
+}
+
+.result-item .rating {
     font-size: 12px;
-    padding: 10px 10px;
+    padding: 10px 0;
     text-align: left;
 }
 
-.result-item .details h2,
-.result-item .details p {
-    margin: 10px 0; /* Margins to space out text inside details */
-}
-
-.result-item .price {
-    flex: 0 1 auto; /* Do not grow, can shrink, auto basis based on content size */
-    white-space: nowrap; /* Ensures the text does not wrap */
+.result-item .brand, .result-item .price, .result-item .link {
+    font-size: 12px;
+    text-align: left;
+    white-space: nowrap;
 }
 
 .result-item .link {
-    padding: 10px; /* Remove padding if unnecessary */
-    margin: 0; /* Remove default margin to eliminate extra space */
-    font-size: 12px; /* Maintain consistent font size */
+    margin-top: 5px;
 }
 
 .result-item .link a {
-    display: inline-block; /* This will treat the link more like a block element, providing better control over padding and margins */
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
 }
 
+.result-item .link a:hover {
+    background-color: #0056b3;
+}
 
 @media (max-width: 768px) {
     .result-item {
-        flex-direction: column; /* Stack elements vertically on smaller screens */
-        align-items: start; /* Aligns items to the start of the item block */
-        min-height: auto; /* Removes fixed height constraint */
+        flex-direction: column;
+        align-items: start;
+        min-height: auto;
     }
 
     .result-item img {
-        width: 80%; /* Full width images on smaller screens */
-        height: auto; /* Maintain aspect ratio */
+        width: 80%;
+        height: auto;
     }
 
-    .result-item .details,
-    .result-item .price {
-        flex-grow: 1;
-        width: 100%; /* Full width for details and price */
+    .result-item .details, .result-item .price {
+        width: 100%;
     }
 }
 
 @media (max-width: 600px) {
     .search-form, #searchResults {
         width: 95%;
-        margin: 10px auto; /* Reduce margin for smaller screens */
+        margin: 10px auto;
     }
-}
-
-.result-item h2 {
-    font-size: 16px;
-    color: #333;  
-    margin-bottom: 5px; 
 }
 
 .global-header {
@@ -188,12 +182,10 @@ html, body {
     font-weight: bold;
     width: 100%;
     text-decoration: underline;
-    /* padding: 20px 20px; */
     background-color: #fff;
-    /* position: fixed; Keeps the header at the top of the viewport */
     top: 0;
     left: 0;
-    z-index: 1000; /* Keeps the header above other content */
+    z-index: 1000;
 }
 
 .global-header .logo img {
@@ -207,7 +199,7 @@ html, body {
     width: 100%;
     padding: 10px;
     text-align: center;
-    position: fixed; /* Moves the footer to the bottom of the page */
+    position: fixed;
     bottom: 0;
     left: 0;
     background-color: #fff;
@@ -220,5 +212,61 @@ html, body {
     margin: 10px;
 }
 
+button {
+    margin-right: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+}
 
+button.active {
+    background-color: #007bff;
+    color: white;
+}
 
+button:not(.active) {
+    background-color: #f8f9fa;
+    color: #007bff;
+}
+
+.results-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.column {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 80vh;
+}
+
+.rainforest-results {
+    border-right: 1px solid #ccc;
+}
+
+.bluecart-results {
+    border-left: 1px solid #ccc;
+}
+
+@media (max-width: 767px) {
+    .results-container {
+        flex-direction: column;
+    }
+}
+
+.load-more-button {
+    font-size: 14px;
+    padding: 10px 20px;
+    margin: 20px 0;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.load-more-button:hover {
+    background-color: #333;
+}
