@@ -29,14 +29,13 @@ html, body {
 
 .search-form {
     padding: 10px;
-    padding-top: 20px;
     width: 100%;
     max-width: 600px;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    margin: 20px auto;
+    margin: 10px auto;
 }
 
 .search-input {

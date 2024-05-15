@@ -144,26 +144,41 @@ function SearchPage() {
           </div>
         )}
         <div id="searchResults">
-          {loading && <p>searching</p>}
-          {error && <p>{error}</p>}
-          {!loading && !error && filteredResults.length === 0 && <p>No results found. Try another search.</p>}
+          {loading && <p className="loading">searching</p>}
+          {error && <p className="error">{error}</p>}
+          {!loading && !error && filteredResults.length === 0 && <p className="no-results">No results found. Try another search.</p>}
           {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
             <div className="results-container">
               <div className="column rainforest-results">
                 {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
                 {hasMore && (
-                  <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                  <div className="load-more-container">
+                    <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                  </div>
                 )}
               </div>
               <div className="column bluecart-results">
                 {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
                 {hasMore && (
-                  <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                  <div className="load-more-container">
+                    <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                  </div>
                 )}
               </div>
             </div>
           )}
-          {!loading && !error && filteredResults.length > 0 && (!isDesktop || activeTab !== 'all') && renderResults(filteredResults)}
+          {!loading && !error && filteredResults.length > 0 && (!isDesktop || activeTab !== 'all') && (
+            <div className="results-container single-column">
+              <div className="column">
+                {renderResults(filteredResults)}
+                {hasMore && (
+                  <div className="load-more-container">
+                    <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <Footer />
