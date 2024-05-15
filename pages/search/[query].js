@@ -144,7 +144,7 @@ function SearchPage() {
           </div>
         )}
         <div id="searchResults">
-          {loading && <p>Loading...</p>}
+          {loading && <p>searching</p>}
           {error && <p>{error}</p>}
           {!loading && !error && filteredResults.length === 0 && <p>No results found. Try another search.</p>}
           {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
@@ -152,13 +152,13 @@ function SearchPage() {
               <div className="column rainforest-results">
                 {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
                 {hasMore && (
-                  <button onClick={loadMoreResults} className="load-more-button">Load More</button>
+                  <button onClick={loadMoreResults} className="load-more-button">more results</button>
                 )}
               </div>
               <div className="column bluecart-results">
                 {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
                 {hasMore && (
-                  <button onClick={loadMoreResults} className="load-more-button">Load More</button>
+                  <button onClick={loadMoreResults} className="load-more-button">more results</button>
                 )}
               </div>
             </div>
