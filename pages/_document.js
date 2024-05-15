@@ -6,6 +6,7 @@ class MyDocument extends Document {
       <Html>
         <Head>
           <link rel="icon" href="/images/trio_favicon.png" />
+          <title>Curious Trio - Search</title>
         </Head>
         <body>
           <Main />
