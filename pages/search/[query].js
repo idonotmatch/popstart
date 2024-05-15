@@ -123,67 +123,73 @@ function SearchPage() {
   };
 
   return (
-    <>
+    <div className="page-container">
       <Header />
-      <div className="container">
-        <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="text"
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="start here."
-          />
-          <button type="submit" className="search-button">go.</button>
-        </form>
-        {results.length > 0 && (
-          <div className="tabs">
-            <button className={activeTab === 'all' ? 'active' : ''} onClick={() => setActiveTab('all')}>All Results</button>
-            <button className={activeTab === 'amazon' ? 'active' : ''} onClick={() => setActiveTab('amazon')}>Amazon</button>
-            <button className={activeTab === 'walmart' ? 'active' : ''} onClick={() => setActiveTab('walmart')}>Walmart</button>
+      <main>
+        <div className="container">
+          <form onSubmit={handleSearch} className="search-form">
+            <input
+              type="text"
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="start here."
+            />
+            <button type="submit" className="search-button">go.</button>
+          </form>
+          {results.length > 0 && (
+            <div className="tabs">
+              <button className={activeTab === 'all' ? 'active' : ''} onClick={() => setActiveTab('all')}>All Results</button>
+              <button className={activeTab === 'amazon' ? 'active' : ''} onClick={() => setActiveTab('amazon')}>Amazon</button>
+              <button className={activeTab === 'walmart' ? 'active' : ''} onClick={() => setActiveTab('walmart')}>Walmart</button>
+            </div>
+          )}
+          <div id="searchResults">
+            {loading && <p className="loading">searching</p>}
+            {error && <p className="error">{error}</p>}
+            {!loading && !error && filteredResults.length === 0 && (
+              <p className="no-results">No results found. Try another search.</p>
+            )}
+            {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
+              <div className="results-container">
+                <div className="column rainforest-results">
+                  {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
+                  {hasMore && (
+                    <div className="load-more-container">
+                      <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                    </div>
+                  )}
+                </div>
+                <div className="column bluecart-results">
+                  {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
+                  {hasMore && (
+                    <div className="load-more-container">
+                      <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {!loading && !error && filteredResults.length > 0 && (!isDesktop || activeTab !== 'all') && (
+              <div className="results-container single-column">
+                <div className="column">
+                  {renderResults(filteredResults)}
+                  {hasMore && (
+                    <div className="load-more-container">
+                      <button onClick={loadMoreResults} className="load-more-button">more results</button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        <div id="searchResults">
-          {loading && <p className="loading">searching</p>}
-          {error && <p className="error">{error}</p>}
-          {!loading && !error && filteredResults.length === 0 && <p className="no-results">No results found. Try another search.</p>}
-          {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
-            <div className="results-container">
-              <div className="column rainforest-results">
-                {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
-                {hasMore && (
-                  <div className="load-more-container">
-                    <button onClick={loadMoreResults} className="load-more-button">more results</button>
-                  </div>
-                )}
-              </div>
-              <div className="column bluecart-results">
-                {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
-                {hasMore && (
-                  <div className="load-more-container">
-                    <button onClick={loadMoreResults} className="load-more-button">more results</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          {!loading && !error && filteredResults.length > 0 && (!isDesktop || activeTab !== 'all') && (
-            <div className="results-container single-column">
-              <div className="column">
-                {renderResults(filteredResults)}
-                {hasMore && (
-                  <div className="load-more-container">
-                    <button onClick={loadMoreResults} className="load-more-button">more results</button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      </main>
       <Footer />
-    </>
+    </div>
   );
 }
 
 export default SearchPage;
+
+
