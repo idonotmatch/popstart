@@ -1,5 +1,6 @@
 import { gql } from 'apollo-server-micro';
 import got from 'got';
+import redisClient from './redisClient'; // Import Redis client
 
 const typeDefs = gql`
   type Query {
@@ -43,6 +44,16 @@ const resolvers = {
     searchProducts: async (_, { searchTerm, source }) => {
       let data = [];
       const start = performance.now(); // Start timer for logging
+
+      // Generate a unique cache key based on the search term and source
+      const cacheKey = `${source}:${searchTerm}`;
+
+      // Check Redis cache
+      const cachedResults = await redisClient.get(cacheKey);
+      if (cachedResults) {
+        console.log('Returning cached results');
+        return JSON.parse(cachedResults);
+      }
 
       if (source === 'rainforest') {
         const params = {
@@ -104,6 +115,11 @@ const resolvers = {
           throw new Error('Failed to fetch data');
         }
       }
+
+      // Store results in Redis with a 24-hour expiration time
+      await redisClient.set(cacheKey, JSON.stringify(data), {
+        EX: 86400, // 24 hours
+      });
 
       const end = performance.now(); // End timer
       console.log(`API call for ${source} took ${end - start} milliseconds`); // Log time taken
