@@ -1,6 +1,6 @@
 import { gql } from 'apollo-server-micro';
 import got from 'got';
-import redisClient from './lib/redisClient.js'; // Import Redis client
+import redisClient from '../../lib/redisClient.js'; // Import Redis client
 
 const typeDefs = gql`
   type Query {
