@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
@@ -13,12 +13,20 @@ function SearchPage() {
   const [results, setResults] = useState([]);
   const [filteredResults, setFilteredResults] = useState([]);
   const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const isDesktop = useMediaQuery({ minWidth: 768 });
 
   const { setSearchResults, getSearchResults } = useSearch();
+
+  // Refs for scroll containers
+  const amazonRef = useRef(null);
+  const walmartRef = useRef(null);
+
+  // State for scroll positions
+  const [scrollPositions, setScrollPositions] = useState({
+    amazon: 0,
+    walmart: 0,
+  });
 
   const fetchResults = useCallback(async () => {
     if (!query) return;
@@ -33,34 +41,36 @@ function SearchPage() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/search?term=${encodeURIComponent(query)}&page=${page}`, {
+      const response = await fetch(`/api/search?term=${encodeURIComponent(query)}`, {
         method: 'GET',
       });
-      if (!response.ok) throw new Error('Network response was not ok');
+
+      if (!response.ok)
+        throw new Error('Network response was not ok');
 
       const data = await response.json();
-      if (!data.results) throw new Error('Invalid API response');
+      if (!data.results)
+        throw new Error('Invalid API response');
 
       console.log('Fetched data:', data);
 
-      setResults((prevResults) => (page === 1 ? data.results : [...prevResults, ...data.results]));
-      setHasMore(data.results.length > 0);
+      setResults(data.results);
+      setFilteredResults(data.results);
       setError('');
       setSearchResults(query, data.results);
     } catch (error) {
       setError(error.message);
       setResults([]);
-      setHasMore(false);
     } finally {
       setLoading(false);
     }
-  }, [query, page, getSearchResults, setSearchResults]);
+  }, [query, getSearchResults, setSearchResults]);
 
   useEffect(() => {
     if (query) {
       fetchResults();
     }
-  }, [query, page, fetchResults]);
+  }, [query, fetchResults]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -96,6 +106,34 @@ function SearchPage() {
     filterAndAlternateResults();
   }, [results, activeTab]);
 
+  // Handle tab change and restore scroll position
+  const handleTabChange = (tab) => {
+    // Save current scroll position
+    if (activeTab === 'amazon' && amazonRef.current) {
+      setScrollPositions((prev) => ({
+        ...prev,
+        amazon: amazonRef.current.scrollTop,
+      }));
+    } else if (activeTab === 'walmart' && walmartRef.current) {
+      setScrollPositions((prev) => ({
+        ...prev,
+        walmart: walmartRef.current.scrollTop,
+      }));
+    }
+
+    // Change active tab
+    setActiveTab(tab);
+
+    // Restore scroll position for the new tab
+    setTimeout(() => {
+      if (tab === 'amazon' && amazonRef.current) {
+        amazonRef.current.scrollTop = scrollPositions.amazon;
+      } else if (tab === 'walmart' && walmartRef.current) {
+        walmartRef.current.scrollTop = scrollPositions.walmart;
+      }
+    }, 0);
+  };
+
   const renderResults = (results) => {
     return results.map((item, index) => (
       <div key={index} className="result-item">
@@ -116,80 +154,55 @@ function SearchPage() {
     ));
   };
 
-  const loadMoreResults = () => {
-    if (hasMore && !loading) {
-      setPage((prevPage) => prevPage + 1);
-    }
-  };
-
   return (
     <div className="page-container">
       <Header />
-      <main>
-        <div className="container">
-          <form onSubmit={handleSearch} className="search-form">
-            <input
-              type="text"
-              className="search-input"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="start here."
-            />
-            <button type="submit" className="search-button">go.</button>
-          </form>
-          {results.length > 0 && (
-            <div className="tabs">
-              <button className={activeTab === 'all' ? 'active' : ''} onClick={() => setActiveTab('all')}>All Results</button>
-              <button className={activeTab === 'amazon' ? 'active' : ''} onClick={() => setActiveTab('amazon')}>Amazon</button>
-              <button className={activeTab === 'walmart' ? 'active' : ''} onClick={() => setActiveTab('walmart')}>Walmart</button>
+      <div className="container">
+        <form onSubmit={handleSearch} className="search-form">
+          <input
+            type="text"
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="start here."
+          />
+          <button type="submit" className="search-button">go.</button>
+        </form>
+        {results.length > 0 && (
+          <div className="tabs">
+            <button className={activeTab === 'all' ? 'active' : ''} onClick={() => handleTabChange('all')}>All Results</button>
+            <button className={activeTab === 'amazon' ? 'active' : ''} onClick={() => handleTabChange('amazon')}>Amazon</button>
+            <button className={activeTab === 'walmart' ? 'active' : ''} onClick={() => handleTabChange('walmart')}>Walmart</button>
+          </div>
+        )}
+        <div id="searchResults">
+          {loading && <p className="loading">searching</p>}
+          {error && <p className="error">{error}</p>}
+          {!loading && !error && filteredResults.length === 0 && (
+            <p className="no-results">No results found. Try another search.</p>
+          )}
+          {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
+            <div className="results-container">
+              <div className="column rainforest-results" ref={amazonRef}>
+                {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
+              </div>
+              <div className="column bluecart-results" ref={walmartRef}>
+                {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
+              </div>
             </div>
           )}
-          <div id="searchResults">
-            {loading && <p className="loading">searching</p>}
-            {error && <p className="error">{error}</p>}
-            {!loading && !error && filteredResults.length === 0 && (
-              <p className="no-results">No results found. Try another search.</p>
-            )}
-            {!loading && !error && filteredResults.length > 0 && activeTab === 'all' && isDesktop && (
-              <div className="results-container">
-                <div className="column rainforest-results">
-                  {renderResults(results.filter((result) => result.link.includes('amazon.com')))}
-                  {hasMore && (
-                    <div className="load-more-container">
-                      <button onClick={loadMoreResults} className="load-more-button">more results</button>
-                    </div>
-                  )}
-                </div>
-                <div className="column bluecart-results">
-                  {renderResults(results.filter((result) => result.link.includes('walmart.com')))}
-                  {hasMore && (
-                    <div className="load-more-container">
-                      <button onClick={loadMoreResults} className="load-more-button">more results</button>
-                    </div>
-                  )}
-                </div>
+          {!loading && !error && filteredResults.length > 0 && (!isDesktop || activeTab !== 'all') && (
+            <div className="results-container single-column">
+              <div className="column" ref={activeTab === 'amazon' ? amazonRef : walmartRef}>
+                {renderResults(filteredResults)}
               </div>
-            )}
-            {!loading && !error && filteredResults.length > 0 && (!isDesktop || activeTab !== 'all') && (
-              <div className="results-container single-column">
-                <div className="column">
-                  {renderResults(filteredResults)}
-                  {hasMore && (
-                    <div className="load-more-container">
-                      <button onClick={loadMoreResults} className="load-more-button">more results</button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
       <Footer />
     </div>
   );
 }
 
 export default SearchPage;
-
-
