@@ -277,3 +277,11 @@ button:not(.active) {
         flex-direction: column;
     }
 }
+
+.affiliate-disclaimer {
+    font-size: 8px;
+    font-style: italic;
+    text-align: left;
+    margin-top: 10px;
+  }
+  

@@ -169,14 +169,19 @@ function SearchPage() {
           <button type="submit" className="search-button">go.</button>
         </form>
         {results.length > 0 && (
-          <div className="tabs">
-            <button className={activeTab === 'all' ? 'active' : ''} onClick={() => handleTabChange('all')}>All Results</button>
-            <button className={activeTab === 'amazon' ? 'active' : ''} onClick={() => handleTabChange('amazon')}>Amazon</button>
-            <button className={activeTab === 'walmart' ? 'active' : ''} onClick={() => handleTabChange('walmart')}>Walmart</button>
-          </div>
+          <>
+            <div className="tabs">
+              <button className={activeTab === 'all' ? 'active' : ''} onClick={() => handleTabChange('all')}>All Results</button>
+              <button className={activeTab === 'amazon' ? 'active' : ''} onClick={() => handleTabChange('amazon')}>Amazon</button>
+              <button className={activeTab === 'walmart' ? 'active' : ''} onClick={() => handleTabChange('walmart')}>Walmart</button>
+            </div>
+            <p className="affiliate-disclaimer">
+              *purchase links are associate/affiliate links and I may (or may not) earn from qualifying purchases
+            </p>  
+          </>
         )}
         <div id="searchResults">
-          {loading && <p className="loading">searching</p>}
+          {loading && <p className="loading">searching.</p>}
           {error && <p className="error">{error}</p>}
           {!loading && !error && filteredResults.length === 0 && (
             <p className="no-results">No results found. Try another search.</p>
