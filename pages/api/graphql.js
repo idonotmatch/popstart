@@ -25,6 +25,8 @@ const typeDefs = gql`
 
 const fetchWithRetry = async (url, params, retries = 3) => {
   let lastError;
+  const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
   for (let i = 0; i < retries; i++) {
     try {
       const response = await got(url, { searchParams: params, responseType: 'json' });
@@ -35,9 +37,38 @@ const fetchWithRetry = async (url, params, retries = 3) => {
     } catch (error) {
       lastError = error;
     }
+    await delay(1000 * Math.pow(2, i)); // Exponential backoff
   }
   throw lastError;
 };
+
+const mapRainforestProduct = (item) => ({
+  asin: item.asin,
+  title: item.title,
+  link: item.link,
+  image: item.image,
+  isPrime: item.is_prime,
+  rating: item.rating,
+  ratingsTotal: item.ratings_total,
+  price: item.price?.value ? `$${item.price.value}` : 'Unavailable',
+  availability: item.availability || 'Unavailable',
+  source: 'rainforest',
+  brand: item.brand || 'Unavailable'
+});
+
+const mapBluecartProduct = (item) => ({
+  asin: item.product.item_id,
+  title: item.product.title,
+  link: item.product.link,
+  image: item.product.main_image || (item.product.images.length > 0 ? item.product.images[0] : ""),
+  isPrime: false,
+  rating: item.product.rating || 0,
+  ratingsTotal: item.product.ratings_total || 0,
+  price: item.offers.primary ? `${item.offers.primary.currency_symbol}${item.offers.primary.price}` : "N/A",
+  availability: item.inventory.in_stock ? "In stock" : "Out of stock",
+  source: 'bluecart',
+  brand: item.product.brand || 'Unavailable'
+});
 
 const resolvers = {
   Query: {
@@ -66,19 +97,7 @@ const resolvers = {
 
         try {
           const response = await fetchWithRetry('https://api.rainforestapi.com/request', params);
-          data = response.search_results.map((item) => ({
-            asin: item.asin,
-            title: item.title,
-            link: item.link,
-            image: item.image,
-            isPrime: item.is_prime,
-            rating: item.rating,
-            ratingsTotal: item.ratings_total,
-            price: item.price?.value ? `$${item.price.value}` : 'Unavailable',
-            availability: item.availability || 'Unavailable',
-            source: 'rainforest',
-            brand: item.brand || 'Unavailable'
-          }));
+          data = response.search_results.map(mapRainforestProduct);
         } catch (error) {
           console.error('Failed to fetch data from Rainforest API:', error);
           throw new Error('Failed to fetch data');
@@ -97,19 +116,7 @@ const resolvers = {
 
         try {
           const response = await fetchWithRetry('https://api.bluecartapi.com/request', params);
-          data = response.search_results.map((item) => ({
-            asin: item.product.item_id,
-            title: item.product.title,
-            link: item.product.link,
-            image: item.product.main_image,
-            isPrime: false,
-            rating: item.product.rating,
-            ratingsTotal: item.product.ratings_total,
-            price: `$${item.offers.primary.price}`,
-            availability: item.inventory.in_stock ? "In Stock" : "Out of Stock",
-            source: 'bluecart',
-            brand: item.product.brand || 'Unavailable'
-          }));
+          data = response.search_results.map(mapBluecartProduct);
         } catch (error) {
           console.error('Failed to fetch data from Bluecart API:', error);
           throw new Error('Failed to fetch data');

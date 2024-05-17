@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     search_term: term,
     exclude_sponsored: "true",
     currency: "usd",
-    associate_id: "curioustrio-20",
+    associate_id: "ctrio-20",
     page: page || "1",
     max_page: page || "1",
     output: "json",
