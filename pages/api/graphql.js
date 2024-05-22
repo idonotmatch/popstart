@@ -1,4 +1,4 @@
-import { gql } from 'apollo-server-micro';
+import { ApolloServer, gql } from 'apollo-server-micro';
 import got from 'got';
 import redisClient from '../../lib/redisClient.js';
 
@@ -147,4 +147,9 @@ const resolvers = {
   }
 };
 
-export { typeDefs, resolvers };
+const apolloServer = new ApolloServer({ typeDefs, resolvers });
+
+export default async function handler(req, res) {
+  await apolloServer.start();
+  return apolloServer.createHandler({ path: '/api/graphql' })(req, res);
+}
