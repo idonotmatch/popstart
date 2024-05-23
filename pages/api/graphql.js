@@ -147,9 +147,21 @@ const resolvers = {
   }
 };
 
-const apolloServer = new ApolloServer({ typeDefs, resolvers });
+let apolloServer = null;
+const initializeApolloServer = async () => {
+  if (!apolloServer) {
+    apolloServer = new ApolloServer({ typeDefs, resolvers });
+    await apolloServer.start();
+  }
+};
 
 export default async function handler(req, res) {
-  await apolloServer.start();
+  await initializeApolloServer();
   return apolloServer.createHandler({ path: '/api/graphql' })(req, res);
 }
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
