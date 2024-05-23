@@ -123,7 +123,7 @@ export default async function handler(req, res) {
       ];
 
       // Cache the results with an expiration time
-      await redis.set(cacheKey, JSON.stringify({ results: combinedResults }), 'EX', 3600); // Cache for 1 hour
+      await redis.set(cacheKey, JSON.stringify({ results: combinedResults }), 'EX', 84000); // Cache for 24 hours
 
       return res.status(200).json({ results: combinedResults });
     } else {
