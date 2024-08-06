@@ -1,140 +1,161 @@
 import axios from 'axios';
 import Redis from 'ioredis';
-import dotenv from 'dotenv';
 
-// Load environment variables from .env.local
-dotenv.config();
+// Initialize Redis client with fallback
+let redisClient;
+try {
+  redisClient = new Redis(process.env.REDIS_URL, {
+    maxRetriesPerRequest: 1,
+    retryStrategy: () => null
+  });
+  redisClient.on('error', (err) => {
+    console.warn('Redis Client Error:', err);
+    redisClient = null; // Disable Redis client on error
+  });
+} catch (error) {
+  console.warn('Failed to initialize Redis:', error);
+  redisClient = null;
+}
 
-// Extract the Redis URL from environment variables
-const redisUrl = process.env.UPSTASH_REDIS_URL;
-
-// Initialize Redis client with enhanced settings and TLS/SSL enabled
-const redis = new Redis(redisUrl, {
-  tls: {
-    rejectUnauthorized: false, // Set to true in production with a trusted certificate authority
+// Cache helper function
+const cacheHelper = {
+  get: async (key) => {
+    if (redisClient) {
+      try {
+        return await redisClient.get(key);
+      } catch (error) {
+        console.warn('Redis get error:', error);
+      }
+    }
+    return null;
   },
-  connectTimeout: 10000, // 10 seconds connection timeout
-  retryStrategy: (times) => {
-    // Exponential backoff retry strategy
-    const delay = Math.min(times * 50, 2000); // Try up to 2 seconds between retries
-    console.log(`Reconnecting to Redis after ${delay}ms`);
-    return delay;
-  },
-});
+  set: async (key, value, options) => {
+    if (redisClient) {
+      try {
+        await redisClient.set(key, value, options);
+      } catch (error) {
+        console.warn('Redis set error:', error);
+      }
+    }
+  }
+};
 
-redis.on('error', (err) => {
-  console.error('Redis error:', err);
-});
+const mapProduct = (item, source) => {
+  if (source === 'walmart') {
+    return {
+      asin: item.id || '',
+      brand: item.brand || 'N/A',
+      title: item.name || '',
+      link: item.url || '',
+      image: item.image || '',
+      isPrime: false,
+      rating: item.rating?.average_rating ? Number(item.rating.average_rating).toFixed(1) : '0.0',
+      ratingsTotal: item.rating?.number_of_reviews || 0,
+      price: item.price ? `${item.price_currency}${Number(item.price).toFixed(2)}` : "N/A",
+      availability: item.availability || "Unavailable",
+      source: 'walmart',
+      sponsored: item.sponsored || false,
+    };
+  } else if (source === 'amazon') {
+    return {
+      asin: item.asin || '',
+      brand: item.brand || 'N/A',
+      title: item.name || '',
+      link: item.url || '',
+      image: item.image || '',
+      isPrime: item.has_prime || false,
+      rating: item.stars ? Number(item.stars).toFixed(1) : '0.0',
+      ratingsTotal: item.total_reviews || 0,
+      price: item.price ? `$${Number(item.price).toFixed(2)}` : "N/A",
+      availability: item.availability || "Unavailable",
+      source: 'amazon',
+      sponsored: item.sponsored || false,
+    };
+  }
+};
 
-redis.on('connect', () => {
-  console.log('Connected to Redis');
-});
+const filterSponsoredProducts = (products) => {
+  return products.filter(product => !product.sponsored);
+};
 
-redis.on('reconnecting', (delay) => {
-  console.log(`Reconnecting to Redis after ${delay}ms`);
-});
+const fetchProducts = async (term, source, sortBy, page = 1) => {
+  const url = `https://api.scraperapi.com/structured/${source}/search`;
+  const params = {
+    api_key: process.env.SCRAPER_API_KEY,
+    query: term,
+    country: 'us',
+    page: page.toString(),
+    sort_by: sortBy || '',
+    exclude_sponsored: 'true'
+  };
 
-const mapBluecartProduct = (item) => ({
-  asin: item.product.item_id,
-  brand: item.product.brand,
-  title: item.product.title,
-  link: item.product.link,
-  image: item.product.main_image || (item.product.images.length > 0 ? item.product.images[0] : ""),
-  isPrime: false,
-  rating: item.product.rating || 0,
-  ratingsTotal: item.product.ratings_total || 0,
-  price: item.offers.primary ? `${item.offers.primary.currency_symbol}${item.offers.primary.price}` : "N/A",
-  availability: item.inventory.in_stock ? "In stock" : "Out of stock",
-  delivery: {
-    tagline: item.fulfillment.shipping ? `Shipping available in ${item.fulfillment.shipping_days} days` : "No shipping available",
-    price: ""
-  },
-  shoppingAdvisors: [],
-});
+  try {
+    const response = await axios.get(url, { params });
+    console.log(`Raw API response from ${source}:`, JSON.stringify(response.data, null, 2));
+
+    let jsonData = response.data;
+
+    let results = [];
+    let totalPages = 1;
+
+    if (source === 'walmart' && jsonData.items) {
+      results = jsonData.items;
+      totalPages = jsonData.total_pages || 1;
+    } else if (source === 'amazon' && jsonData.results) {
+      results = jsonData.results;
+      totalPages = jsonData.total_pages || 1;
+    } else {
+      console.error(`Invalid API response structure from ${source}:`, jsonData);
+      return { results: [], totalPages: 0 };
+    }
+
+    const mappedResults = results.map(item => mapProduct(item, source));
+    console.log(`Mapped results for ${source}:`, JSON.stringify(mappedResults, null, 2));
+
+    return { results: filterSponsoredProducts(mappedResults), totalPages };
+  } catch (error) {
+    console.error(`Error fetching data from ${source} API:`, error.message);
+    throw error;
+  }
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
-    console.log('Method not allowed');
-    return res.status(405).end(); // Method Not Allowed
+    return res.status(405).end();
   }
 
-  const { term, page } = req.query;
-  const cacheKey = `search:${term}:${page || 1}`;
+  const { term, page = '1', sort_by, source = 'all' } = req.query;
 
-  try {
-    // Check cache first
-    const cachedResults = await redis.get(cacheKey);
-    if (cachedResults) {
-      console.log('Serving from cache');
-      return res.status(200).json(JSON.parse(cachedResults));
+  res.setHeader('Content-Type', 'application/json');
+
+  const results = [];
+
+  const streamResults = async (sourceToFetch) => {
+    const cacheKey = `search:${sourceToFetch}:${term}:${sort_by}:${page}`;
+    try {
+      const cachedResults = await cacheHelper.get(cacheKey);
+
+      if (cachedResults) {
+        results.push({ source: sourceToFetch, ...JSON.parse(cachedResults) });
+      } else {
+        const { results: sourceResults, totalPages } = await fetchProducts(term, sourceToFetch, sort_by, parseInt(page));
+        results.push({ source: sourceToFetch, results: sourceResults, totalPages });
+        await cacheHelper.set(cacheKey, JSON.stringify({ results: sourceResults, totalPages }), { EX: 3600 }); // Cache for 1 hour
+      }
+    } catch (error) {
+      console.error(`Error streaming results from ${sourceToFetch}:`, error.message);
+      results.push({ source: sourceToFetch, error: `Failed to fetch data from ${sourceToFetch}: ${error.message}` });
     }
+  };
 
-    const rainforestParams = {
-      api_key: process.env.RAINFOREST_API_KEY,
-      type: "search",
-      amazon_domain: "amazon.com",
-      search_term: term,
-      exclude_sponsored: "true",
-      currency: "usd",
-      associate_id: "curios-20",
-      page: page || "1",
-      max_page: page || "1",
-      output: "json",
-      include_html: "false"
-    };
-
-    const bluecartParams = {
-      api_key: process.env.BLUECART_API_KEY,
-      search_term: term,
-      type: "search",
-      sort_by: "best_match",
-      page: page || "1",
-      max_page: page || "1",
-      output: "json",
-      include_html: "false"
-    };
-
-    const [rainforestResponse, bluecartResponse] = await Promise.all([
-      axios.get('https://api.rainforestapi.com/request', { params: rainforestParams }),
-      axios.get('https://api.bluecartapi.com/request', { params: bluecartParams })
+  if (source === 'all') {
+    await Promise.all([
+      streamResults('walmart'),
+      streamResults('amazon')
     ]);
-
-    if (rainforestResponse.status === 200 && bluecartResponse.status === 200) {
-      const rainforestResults = rainforestResponse.data.search_results.map((item) => ({
-        asin: item.asin,
-        brand: item.brand,
-        title: item.title,
-        link: item.link,
-        image: item.image,
-        isPrime: item.is_prime,
-        rating: item.rating,
-        ratingsTotal: item.ratings_total,
-        price: item.price ? item.price.raw : "N/A",
-        availability: item.availability,
-        delivery: item.delivery || { tagline: "", price: "" },
-        shoppingAdvisors: item.shopping_advisors || [],
-      }));
-
-      const bluecartResults = bluecartResponse.data.search_results.map(mapBluecartProduct);
-
-      const combinedResults = [
-        ...rainforestResults,
-        ...bluecartResults
-      ];
-
-      // Cache the results with an expiration time
-      await redis.set(cacheKey, JSON.stringify({ results: combinedResults }), 'EX', 84400); // Cache for 72 hours
-
-      return res.status(200).json({ results: combinedResults });
-    } else {
-      throw new Error(`API calls failed with statuses: Rainforest: ${rainforestResponse.status}, Bluecart: ${bluecartResponse.status}`);
-    }
-  } catch (error) {
-    console.error('Search API error:', error.message);
-    if (error.response) {
-      return res.status(error.response.status).json({ message: error.response.data.message });
-    } else {
-      return res.status(500).json({ error: 'Internal Server Error' });
-    }
+  } else {
+    await streamResults(source);
   }
+
+  res.status(200).json(results);
 }
