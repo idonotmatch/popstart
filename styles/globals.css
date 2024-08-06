@@ -18,36 +18,37 @@ html, body {
 body {
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent scrolling of the full page */
+    overflow: hidden;
+    height: 100vh;
 }
 
 .page-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
     width: 100%;
-    padding-bottom: 60px; /* Add padding to avoid overlap with fixed footer */
+    overflow: hidden;
 }
 
 header, footer {
-    flex-shrink: 0; /* Prevent header and footer from growing or shrinking */
+    flex-shrink: 0;
 }
 
 main {
     display: flex;
     flex-grow: 1;
     width: 100%;
-    height: 100%; /* Ensure main takes the remaining space */
+    height: 100%;
 }
 
 .container {
     display: flex;
     flex-direction: column;
-    justify-content: center; /* Center vertically */
-    align-items: center; /* Center horizontally */
+    flex-grow: 1;
     width: 100%; 
     padding: 5px;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .search-form {
@@ -55,8 +56,8 @@ main {
     max-width: 600px;
     display: flex;
     flex-direction: column;
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
+    justify-content: center;
+    align-items: center;
     margin: 10px auto;
 }
 
@@ -85,16 +86,16 @@ main {
     min-width: 60px;
     height: 40px;
     padding: 12px 20px;
-    background-color: #000;
-    color: #fff;
+    background-color: #f8f9fa;
+    color: #007bff;
     border: none;
     border-radius: 40px;
     cursor: pointer;
 }
 
 .search-button:hover {
-    background-color: #333;
-    color: #ddd;
+    background-color: #bfbfbf;
+    text-decoration: underline;
 }
 
 .search-modifiers {
@@ -107,7 +108,7 @@ main {
 
 .modifier-select {
     font-size: 12px;
-    font-weight: bold;
+    /* font-weight: bold; */
     width: 50%;
     max-width: 290px;
     height: 40px;
@@ -117,25 +118,25 @@ main {
     border: none;
     border-radius: 40px;
     cursor: pointer;
+    background-color: #f8f9fa;
+    color: #007bff;
 }
 
-.modifier-select:hover {
+/* .modifier-select:hover {
     background-color: #333;
     color: #ddd;
-}
+} */
 
 #searchResults {
-    width: 100%;
     flex-grow: 1;
-    text-align: center;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    text-align: center;
     gap: 10px;
     padding: 10px;
-    padding-bottom: 60px; /* Add padding to the bottom to avoid being cut off by the footer */
-    overflow-y: auto; /* Allow scrolling of the search results */
-    height: auto; /* Let the container height adjust based on content */
-    max-height: calc(100vh - 140px); /* Ensure it doesn't exceed the viewport height minus header and footer */
+    padding-bottom: 70px;
+    overflow: hidden;
 }
 
 .loading,
@@ -178,7 +179,7 @@ main {
     text-align: left;
     font-weight: bold;
     word-wrap: break-word;
-    min-height: 3em; /* Ensure two lines even if there's not enough content */
+    min-height: 3em;
 }
 
 .result-item .brand,
@@ -226,6 +227,7 @@ main {
     left: 0;
     right: 0;
     border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+    z-index: 1000;
 }
 
 .footer-nav a {
@@ -243,7 +245,7 @@ button {
     border-radius: 8px;
 }
 
-button.active {
+/* button.active {
     background-color: #007bff;
     color: white;
 }
@@ -251,14 +253,16 @@ button.active {
 button:not(.active) {
     background-color: #f8f9fa;
     color: #007bff;
-}
+} */
 
 .results-container {
     display: flex;
+    flex-grow: 1;
     justify-content: space-between;
     gap: 20px;
     padding: 10px;
-    height: calc(100vh - 200px); /* Adjust this value based on your layout */
+    overflow: hidden;
+    height: auto;
 }
 
 .column {
@@ -291,14 +295,14 @@ button:not(.active) {
     display: flex;
     justify-content: center;
     margin-top: 10px;
-    margin-bottom: 20px; /* Add margin to ensure it's not cut off */
+    margin-bottom: 20px;
 }
 
 .affiliate-disclaimer {
-    font-size: 8px;
+    font-size: 10px;
     font-style: italic;
     text-align: left;
-    margin-top: 10px;
+    margin-top: 12px;
 }
 
 .pagination {
@@ -315,34 +319,20 @@ button:not(.active) {
 @media (max-width: 768px) {
     .results-container {
         flex-direction: column;
-        height: auto;
+        overflow-y: auto;
     }
 
     .column {
         margin-bottom: 20px;
+        max-height: none;
     }
 
-    .result-item {
-        flex-direction: column;
-        align-items: start;
-        min-height: auto;
-    }
-
-    .result-item img {
-        width: 80%;
-        height: auto;
-    }
-
-    .result-item .details,
-    .result-item .price {
-        width: 100%;
+    .results-scroll {
+        max-height: none;
     }
 
     #searchResults {
-        height: auto;
-        max-height: none;
-        padding-bottom: 60px;
-        overflow-y: visible;
+        padding-bottom: 80px;
     }
 
     .search-modifiers {

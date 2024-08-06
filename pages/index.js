@@ -7,7 +7,7 @@ function HomePage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('');
-  const [source, setSource] = useState('all'); // New state for source selection
+  const [source, setSource] = useState('all');
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -15,6 +15,8 @@ function HomePage() {
       router.push(`/search/${encodeURIComponent(searchTerm)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}`);
     } else {
       // Handle empty search term error
+      console.error('Please enter a search term');
+      // You might want to add some user feedback here, like setting an error state and displaying a message
     }
   };
 
@@ -33,17 +35,23 @@ function HomePage() {
             />
             <button type="submit" className="search-button">go.</button>
           </div>
-          <div className="sort-select-container">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="sort-select">
+          <div className="search-modifiers">
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)} 
+              className="modifier-select"
+            >
               <option value="">Default</option>
               <option value="price_low_to_high">Price (low to high)</option>
               <option value="price_high_to_low">Price (high to low)</option>
               <option value="most_recent">Most Recent</option>
               <option value="average_review">Avg. Customer Review</option>
             </select>
-          </div>
-          <div className="source-select-container">
-            <select value={source} onChange={(e) => setSource(e.target.value)} className="source-select">
+            <select
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              className="modifier-select"
+            >
               <option value="all">All Sources</option>
               <option value="amazon">Amazon</option>
               <option value="walmart">Walmart</option>
