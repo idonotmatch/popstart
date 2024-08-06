@@ -6,15 +6,17 @@ import { useRouter } from 'next/router';
 function HomePage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchAttempted, setSearchAttempted] = useState(false);
+  const [sortBy, setSortBy] = useState('');
+  const [source, setSource] = useState('all');
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      setSearchAttempted(true);
-      router.push(`/search/${encodeURIComponent(searchTerm)}`);
+      router.push(`/search/${encodeURIComponent(searchTerm)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}`);
     } else {
-      setSearchAttempted(true);
+      // Handle empty search term error
+      console.error('Please enter a search term');
+      // You might want to add some user feedback here, like setting an error state and displaying a message
     }
   };
 
@@ -23,18 +25,39 @@ function HomePage() {
       <Header />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">
-          <input
-            type="text"
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="start here."
-          />
-          <button type="submit" className="search-button">go.</button>
+          <div className="search-input-container">
+            <input
+              type="text"
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="start here."
+            />
+            <button type="submit" className="search-button">go.</button>
+          </div>
+          <div className="search-modifiers">
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)} 
+              className="modifier-select"
+            >
+              <option value="">Default</option>
+              <option value="price_low_to_high">Price (low to high)</option>
+              <option value="price_high_to_low">Price (high to low)</option>
+              <option value="most_recent">Most Recent</option>
+              <option value="average_review">Avg. Customer Review</option>
+            </select>
+            <select
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              className="modifier-select"
+            >
+              <option value="all">All Sources</option>
+              <option value="amazon">Amazon</option>
+              <option value="walmart">Walmart</option>
+            </select>
+          </div>
         </form>
-        {searchAttempted && !searchTerm.trim() && (
-          <p>Please enter a valid search term</p>
-        )}
       </div>
       <Footer />
     </>
