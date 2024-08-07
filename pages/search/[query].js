@@ -209,7 +209,6 @@ function SearchPage() {
         </p>
         {query && (
           <div id="searchResults">
-            {(loading.amazon || loading.walmart) && <p className="loading">searching...</p>}
             {error.general && <p className="error">{error.general}</p>}
             {!loading.amazon && !loading.walmart && displayedResults.amazon.length === 0 && displayedResults.walmart.length === 0 && (
               <p className="no-results">No results found. Try another search.</p>
@@ -219,7 +218,7 @@ function SearchPage() {
                 <div className="column rainforest-results">
                   <div className="column-header">Amazon Results</div>
                   <div className="results-scroll" ref={amazonRef}>
-                    {loading.amazon ? <p>Loading Amazon results...</p> : renderResults(displayedResults.amazon)}
+                    {loading.amazon ? <p>Searching Amazon</p> : renderResults(displayedResults.amazon)}
                     {error.amazon && <p className="error">{error.amazon}</p>}
                   </div>
                 </div>
@@ -228,7 +227,7 @@ function SearchPage() {
                 <div className="column bluecart-results">
                   <div className="column-header">Walmart Results</div>
                   <div className="results-scroll" ref={walmartRef}>
-                    {loading.walmart ? <p>Loading Walmart results...</p> : renderResults(displayedResults.walmart)}
+                    {loading.walmart ? <p>Searching Walmart</p> : renderResults(displayedResults.walmart)}
                     {error.walmart && <p className="error">{error.walmart}</p>}
                   </div>
                 </div>
