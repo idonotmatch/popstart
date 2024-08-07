@@ -301,7 +301,7 @@ button:not(.active) {
 .affiliate-disclaimer {
     font-size: 10px;
     font-style: italic;
-    text-align: left;
+    text-align: center;
     margin-top: 12px;
 }
 
