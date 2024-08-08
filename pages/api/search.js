@@ -42,6 +42,8 @@ const cacheHelper = {
 
 const mapProduct = (item, source) => {
   if (source === 'walmart') {
+    // Add more detailed logging for Walmart item structure
+    console.log('Walmart item structure:', JSON.stringify(item, null, 2));
     return {
       asin: item.id || '',
       brand: item.brand || 'N/A',
@@ -51,7 +53,7 @@ const mapProduct = (item, source) => {
       isPrime: false,
       rating: item.rating?.average_rating ? Number(item.rating.average_rating).toFixed(1) : '0.0',
       ratingsTotal: item.rating?.number_of_reviews || 0,
-      price: item.price ? `${item.price_currency}${Number(item.price).toFixed(2)}` : "N/A",
+      price: item.price ? `${item.price_currency || '$'}${Number(item.price).toFixed(2)}` : "N/A",
       availability: item.availability || "Unavailable",
       source: 'walmart',
       sponsored: item.sponsored || false,
@@ -90,7 +92,8 @@ const fetchProducts = async (term, source, sortBy, page = 1) => {
   };
 
   try {
-    const response = await axios.get(url, { params });
+    console.log(`Fetching ${source} results for term: "${term}", page: ${page}, sortBy: ${sortBy}`);
+    const response = await axios.get(url, { params, timeout: 30000 }); // 30 seconds timeout
     console.log(`Raw API response from ${source}:`, JSON.stringify(response.data, null, 2));
 
     let jsonData = response.data;
@@ -98,15 +101,21 @@ const fetchProducts = async (term, source, sortBy, page = 1) => {
     let results = [];
     let totalPages = 1;
 
-    if (source === 'walmart' && jsonData.items) {
-      results = jsonData.items;
-      totalPages = jsonData.total_pages || 1;
+    if (source === 'walmart') {
+      // Add more detailed checks for Walmart response structure
+      if (jsonData.items && Array.isArray(jsonData.items)) {
+        results = jsonData.items;
+        totalPages = jsonData.total_pages || 1;
+      } else {
+        console.error('Unexpected Walmart API response structure:', jsonData);
+        throw new Error('Unexpected Walmart API response structure');
+      }
     } else if (source === 'amazon' && jsonData.results) {
       results = jsonData.results;
       totalPages = jsonData.total_pages || 1;
     } else {
       console.error(`Invalid API response structure from ${source}:`, jsonData);
-      return { results: [], totalPages: 0 };
+      throw new Error(`Invalid API response structure from ${source}`);
     }
 
     const mappedResults = results.map(item => mapProduct(item, source));
@@ -115,6 +124,7 @@ const fetchProducts = async (term, source, sortBy, page = 1) => {
     return { results: filterSponsoredProducts(mappedResults), totalPages };
   } catch (error) {
     console.error(`Error fetching data from ${source} API:`, error.message);
+    console.error(`Error details:`, error.response ? error.response.data : 'No response data');
     throw error;
   }
 };
@@ -136,15 +146,21 @@ export default async function handler(req, res) {
       const cachedResults = await cacheHelper.get(cacheKey);
 
       if (cachedResults) {
+        console.log(`Using cached results for ${sourceToFetch}`);
         results.push({ source: sourceToFetch, ...JSON.parse(cachedResults) });
       } else {
+        console.log(`Fetching fresh results for ${sourceToFetch}`);
         const { results: sourceResults, totalPages } = await fetchProducts(term, sourceToFetch, sort_by, parseInt(page));
         results.push({ source: sourceToFetch, results: sourceResults, totalPages });
         await cacheHelper.set(cacheKey, JSON.stringify({ results: sourceResults, totalPages }), { EX: 3600 }); // Cache for 1 hour
       }
     } catch (error) {
       console.error(`Error streaming results from ${sourceToFetch}:`, error.message);
-      results.push({ source: sourceToFetch, error: `Failed to fetch data from ${sourceToFetch}: ${error.message}` });
+      results.push({ 
+        source: sourceToFetch, 
+        error: `Failed to fetch data from ${sourceToFetch}: ${error.message}`,
+        details: error.response ? error.response.data : 'No response data'
+      });
     }
   };
 
