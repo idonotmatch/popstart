@@ -191,11 +191,13 @@ html, body {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    font-size: 12px;
 }
 
 .result-item .rating,
 .result-item .price {
     margin-bottom: 5px;
+    font-size: 10px;
 }
 
 .result-item .link {
@@ -209,7 +211,7 @@ html, body {
     color: white;
     text-decoration: none;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 8px;
 }
 
 /* Pagination styles */
@@ -399,12 +401,12 @@ html, body {
     }
 
     .result-item .title {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .result-item .price,
     .result-item .rating {
-        font-size: 12px;
+        font-size: 10px;
     }
 
     .result-item .link a {
