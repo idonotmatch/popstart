@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
-import { useMediaQuery } from 'react-responsive';
 import { useSearch } from '../../context/SearchContext';
 
 function SearchPage() {
@@ -17,72 +16,15 @@ function SearchPage() {
   const [displayedResults, setDisplayedResults] = useState({ amazon: [], walmart: [] });
   const [totalPages, setTotalPages] = useState({ amazon: 1, walmart: 1 });
   const [error, setError] = useState({});
-  const isDesktop = useMediaQuery({ minWidth: 768 });
 
   const { setSearchResults, getSearchResults } = useSearch();
-
-  const amazonRef = useRef(null);
-  const walmartRef = useRef(null);
-
-  const fetchWithRetry = async (url, options, retries = 3, delay = 1000) => {
-    try {
-      const response = await fetch(url, options);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return await response.json();
-    } catch (error) {
-      if (retries > 0 && !options.signal.aborted) {
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return fetchWithRetry(url, options, retries - 1, delay * 2);
-      } else {
-        throw error;
-      }
-    }
-  };
-
-  const fetchSource = async (src) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-      controller.abort();
-      console.log(`Request to ${src} timed out after 60 seconds`);
-    }, 60000); // 60 second timeout
-
-    try {
-      const data = await fetchWithRetry(
-        `/api/search?term=${encodeURIComponent(query)}&sort_by=${encodeURIComponent(sortBy)}&page=${page}&source=${src}`,
-        { method: 'GET', signal: controller.signal },
-        3, // Number of retries
-        1000 // Initial delay between retries (doubles each retry)
-      );
-
-      console.log(`API response from ${src}:`, data);
-
-      setAllResults(prev => ({ ...prev, [src]: data[0]?.results || [] }));
-      setDisplayedResults(prev => ({ ...prev, [src]: data[0]?.results || [] }));
-      setTotalPages(prev => ({ ...prev, [src]: data[0]?.totalPages || 1 }));
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error(`Request to ${src} was aborted: ${error.message}`);
-        setError(prev => ({ ...prev, [src]: `Request timed out. Please try again.` }));
-      } else {
-        console.error(`Error fetching data from ${src}:`, error.message);
-        setError(prev => ({ ...prev, [src]: `Failed to fetch data: ${error.message}` }));
-      }
-    } finally {
-      clearTimeout(timeoutId);
-      setLoading(prev => ({ ...prev, [src]: false }));
-    }
-  };
 
   const fetchResults = useCallback(async () => {
     if (!query) return;
 
-    console.log('Fetching results for query:', query, 'sortBy:', sortBy, 'page:', page);
-    const cacheKey = `${query}:${sortBy}:${page}:all`;
+    const cacheKey = `${query}:${sortBy}:${page}:${source}`;
     const cachedResults = getSearchResults(cacheKey);
     if (cachedResults) {
-      console.log('Using cached results:', cachedResults);
       setAllResults(cachedResults.results);
       setDisplayedResults(cachedResults.results);
       setTotalPages(cachedResults.totalPages);
@@ -96,31 +38,45 @@ function SearchPage() {
     setDisplayedResults({ amazon: [], walmart: [] });
     setTotalPages({ amazon: 1, walmart: 1 });
 
-    await Promise.all([fetchSource('amazon'), fetchSource('walmart')]);
+    try {
+      const response = await fetch(`/api/search?term=${encodeURIComponent(query)}&sort_by=${encodeURIComponent(sortBy)}&page=${page}&source=${source}`);
+      const data = await response.json();
 
-  }, [query, sortBy, page, getSearchResults]);
+      const newResults = {
+        amazon: data.find(r => r.source === 'amazon')?.results || [],
+        walmart: data.find(r => r.source === 'walmart')?.results || []
+      };
+      const newTotalPages = {
+        amazon: data.find(r => r.source === 'amazon')?.totalPages || 1,
+        walmart: data.find(r => r.source === 'walmart')?.totalPages || 1
+      };
+      const newErrors = {
+        amazon: data.find(r => r.source === 'amazon')?.error,
+        walmart: data.find(r => r.source === 'walmart')?.error
+      };
+
+      setAllResults(newResults);
+      setDisplayedResults(newResults);
+      setTotalPages(newTotalPages);
+      setError(newErrors);
+      setSearchResults(cacheKey, { results: newResults, totalPages: newTotalPages });
+    } catch (error) {
+      setError({ general: 'Failed to fetch results. Please try again.' });
+    } finally {
+      setLoading({ amazon: false, walmart: false });
+    }
+  }, [query, sortBy, page, source, getSearchResults, setSearchResults]);
 
   useEffect(() => {
     if (query) {
       fetchResults();
     }
-  }, [query, sortBy, page, fetchResults]);
-
-  useEffect(() => {
-    if (source === 'all') {
-      setDisplayedResults(allResults);
-    } else {
-      setDisplayedResults({
-        ...allResults,
-        [source === 'amazon' ? 'walmart' : 'amazon']: []
-      });
-    }
-  }, [source, allResults]);
+  }, [query, sortBy, page, source, fetchResults]);
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      router.push(`/search/${encodeURIComponent(searchTerm)}?sort_by=${encodeURIComponent(sortBy)}&source=all&page=1`);
+      router.push(`/search/${encodeURIComponent(searchTerm)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}&page=1`);
     } else {
       setError({ general: 'Please enter a valid search term' });
     }
@@ -135,7 +91,7 @@ function SearchPage() {
   const handleSourceChange = (e) => {
     const newSource = e.target.value;
     setSource(newSource);
-    // We're not pushing a new route here, just updating the state
+    router.push(`/search/${encodeURIComponent(query)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(newSource)}&page=1`, undefined, { shallow: true });
   };
 
   const handlePageChange = (newPage) => {
@@ -143,28 +99,59 @@ function SearchPage() {
     router.push(`/search/${encodeURIComponent(query)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}&page=${newPage}`, undefined, { shallow: true });
   };
 
-  const renderResults = (items) => {
-    return items.map((item, index) => (
-      <div key={index} className="result-item">
-        <div className="image"><img src={item.image} alt={item.title || 'Product image'} /></div>
-        <div className="details">
-          <div className="title">
-            <p title={item.title} className={`${item.title && item.title.length > 80 ? 'tooltip' : ''}`}>
-              {item.title ? (item.title.length > 80 ? `${item.title.slice(0, 80)}...` : item.title) : 'Title not available'}
-            </p>
-          </div>
-          <div className="rating">
-            <p>
-              Rating: {item.rating !== '0.0' ? item.rating : 'Not Found'} 
-              {item.ratingsTotal > 0 ? ` (${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'})` : ' (No reviews)'}
-            </p>
-          </div>
-          <div className="price"><p>Price: {item.price || 'Not Found'}</p></div>
-          <div className="link"><a href={item.link} target="_blank" rel="noreferrer">{item.source === 'amazon' ? 'Shop Amazon' : 'Shop Walmart'}</a></div>
+  const renderResultsColumn = (source) => {
+    const isAmazon = source === 'Amazon';
+    const results = isAmazon ? displayedResults.amazon : displayedResults.walmart;
+    const isLoading = isAmazon ? loading.amazon : loading.walmart;
+    const errorMessage = isAmazon ? error.amazon : error.walmart;
+
+    return (
+      <div className={`column ${isAmazon ? 'rainforest-results' : 'bluecart-results'}`}>
+        <div className="column-header">{source} Results</div>
+        <div className="results-scroll">
+          {isLoading ? (
+            <p>Searching {source}</p>
+          ) : errorMessage ? (
+            <div className={`error-box ${isAmazon ? 'amazon-error' : 'walmart-error'}`}>
+              <h3>{source} Results Unavailable</h3>
+              <p>{errorMessage}</p>
+              <p>We're working on resolving this issue. In the meantime, you can still view other results.</p>
+            </div>
+          ) : results.length === 0 ? (
+            <p className="no-results">No {source} results found.</p>
+          ) : (
+            results.map((item, index) => (
+              <div key={index} className="result-item">
+                <div className="image"><img src={item.image} alt={item.title || 'Product image'} /></div>
+                <div className="details">
+                  <div className="title">
+                    <p title={item.title} className={`${item.title && item.title.length > 80 ? 'tooltip' : ''}`}>
+                      {item.title ? (item.title.length > 80 ? `${item.title.slice(0, 80)}...` : item.title) : 'Title not available'}
+                    </p>
+                  </div>
+                  <div className="rating">
+                    <p>
+                      Rating: {item.rating !== '0.0' ? item.rating : 'Not Found'} 
+                      {item.ratingsTotal > 0 ? ` (${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'})` : ' (No reviews)'}
+                    </p>
+                  </div>
+                  <div className="price"><p>Price: {item.price || 'Not Found'}</p></div>
+                  <div className="link"><a href={item.link} target="_blank" rel="noreferrer">Shop {source}</a></div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
-    ));
+    );
   };
+
+  const shouldShowPagination = useCallback(() => {
+    const maxPages = Math.max(totalPages.amazon, totalPages.walmart);
+    return !loading.amazon && !loading.walmart && 
+           (displayedResults.amazon.length > 0 || displayedResults.walmart.length > 0) && 
+           maxPages > 1;
+  }, [loading.amazon, loading.walmart, displayedResults.amazon.length, displayedResults.walmart.length, totalPages]);
 
   return (
     <div className="page-container">
@@ -207,35 +194,17 @@ function SearchPage() {
         <p className="affiliate-disclaimer">
           *purchase links are associate/affiliate links and I may (or may not) earn from qualifying purchases
         </p>
+        {error.general && <p className="error">{error.general}</p>}
         {query && (
-          <div id="searchResults">
-            {error.general && <p className="error">{error.general}</p>}
-            {!loading.amazon && !loading.walmart && displayedResults.amazon.length === 0 && displayedResults.walmart.length === 0 && (
-              <p className="no-results">No results found. Try another search.</p>
-            )}
-            <div className="results-container">
-              {(source === 'all' || source === 'amazon') && (
-                <div className="column rainforest-results">
-                  <div className="column-header">Amazon Results</div>
-                  <div className="results-scroll" ref={amazonRef}>
-                    {loading.amazon ? <p>Searching Amazon</p> : renderResults(displayedResults.amazon)}
-                    {error.amazon && <p className="error">{error.amazon}</p>}
-                  </div>
-                </div>
-              )}
-              {(source === 'all' || source === 'walmart') && (
-                <div className="column bluecart-results">
-                  <div className="column-header">Walmart Results</div>
-                  <div className="results-scroll" ref={walmartRef}>
-                    {loading.walmart ? <p>Searching Walmart</p> : renderResults(displayedResults.walmart)}
-                    {error.walmart && <p className="error">{error.walmart}</p>}
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="results-container">
+            {(source === 'all' || source === 'amazon') && renderResultsColumn('Amazon')}
+            {(source === 'all' || source === 'walmart') && renderResultsColumn('Walmart')}
           </div>
         )}
-        {query && !loading.amazon && !loading.walmart && (displayedResults.amazon.length > 0 || displayedResults.walmart.length > 0) && (
+        {query && !loading.amazon && !loading.walmart && displayedResults.amazon.length === 0 && displayedResults.walmart.length === 0 && (
+          <p className="no-results">No results found. Try another search.</p>
+        )}
+        {shouldShowPagination() && (
           <div className="pagination">
             <button onClick={() => handlePageChange(page - 1)} disabled={page === 1}>Previous</button>
             <span>Page {page} of {Math.max(totalPages.amazon, totalPages.walmart)}</span>
