@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { useMediaQuery } from 'react-responsive';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
 import { useSearch } from '../../context/SearchContext';
@@ -17,7 +16,6 @@ function SearchPage() {
   const [displayedResults, setDisplayedResults] = useState({ amazon: [], walmart: [] });
   const [totalPages, setTotalPages] = useState({ amazon: 1, walmart: 1 });
   const [error, setError] = useState({});
-  const isMobile = useMediaQuery({ maxWidth: 768 });
 
   const { setSearchResults, getSearchResults } = useSearch();
 
@@ -101,28 +99,59 @@ function SearchPage() {
     router.push(`/search/${encodeURIComponent(query)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}&page=${newPage}`, undefined, { shallow: true });
   };
 
-  const renderResults = (items, source) => {
-    return items.map((item, index) => (
-      <div key={index} className="result-item">
-        <div className="image"><img src={item.image} alt={item.title || 'Product image'} /></div>
-        <div className="details">
-          <div className="title">
-            <p title={item.title} className={`${item.title && item.title.length > 80 ? 'tooltip' : ''}`}>
-              {item.title ? (item.title.length > 80 ? `${item.title.slice(0, 80)}...` : item.title) : 'Title not available'}
-            </p>
-          </div>
-          <div className="rating">
-            <p>
-              Rating: {item.rating !== '0.0' ? item.rating : 'Not Found'} 
-              {item.ratingsTotal > 0 ? ` (${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'})` : ' (No reviews)'}
-            </p>
-          </div>
-          <div className="price"><p>Price: {item.price || 'Not Found'}</p></div>
-          <div className="link"><a href={item.link} target="_blank" rel="noreferrer">Shop {source}</a></div>
+  const renderResultsColumn = (source) => {
+    const isAmazon = source === 'Amazon';
+    const results = isAmazon ? displayedResults.amazon : displayedResults.walmart;
+    const isLoading = isAmazon ? loading.amazon : loading.walmart;
+    const errorMessage = isAmazon ? error.amazon : error.walmart;
+
+    return (
+      <div className={`column ${isAmazon ? 'rainforest-results' : 'bluecart-results'}`}>
+        <div className="column-header">{source} Results</div>
+        <div className="results-scroll">
+          {isLoading ? (
+            <p>Searching {source}</p>
+          ) : errorMessage ? (
+            <div className={`error-box ${isAmazon ? 'amazon-error' : 'walmart-error'}`}>
+              <h3>{source} Results Unavailable</h3>
+              <p>{errorMessage}</p>
+              <p>We're working on resolving this issue. In the meantime, you can still view other results.</p>
+            </div>
+          ) : results.length === 0 ? (
+            <p className="no-results">No {source} results found.</p>
+          ) : (
+            results.map((item, index) => (
+              <div key={index} className="result-item">
+                <div className="image"><img src={item.image} alt={item.title || 'Product image'} /></div>
+                <div className="details">
+                  <div className="title">
+                    <p title={item.title} className={`${item.title && item.title.length > 80 ? 'tooltip' : ''}`}>
+                      {item.title ? (item.title.length > 80 ? `${item.title.slice(0, 80)}...` : item.title) : 'Title not available'}
+                    </p>
+                  </div>
+                  <div className="rating">
+                    <p>
+                      Rating: {item.rating !== '0.0' ? item.rating : 'Not Found'} 
+                      {item.ratingsTotal > 0 ? ` (${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'})` : ' (No reviews)'}
+                    </p>
+                  </div>
+                  <div className="price"><p>Price: {item.price || 'Not Found'}</p></div>
+                  <div className="link"><a href={item.link} target="_blank" rel="noreferrer">Shop {source}</a></div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
-    ));
+    );
   };
+
+  const shouldShowPagination = useCallback(() => {
+    const maxPages = Math.max(totalPages.amazon, totalPages.walmart);
+    return !loading.amazon && !loading.walmart && 
+           (displayedResults.amazon.length > 0 || displayedResults.walmart.length > 0) && 
+           maxPages > 1;
+  }, [loading.amazon, loading.walmart, displayedResults.amazon.length, displayedResults.walmart.length, totalPages]);
 
   return (
     <div className="page-container">
@@ -165,47 +194,17 @@ function SearchPage() {
         <p className="affiliate-disclaimer">
           *purchase links are associate/affiliate links and I may (or may not) earn from qualifying purchases
         </p>
+        {error.general && <p className="error">{error.general}</p>}
         {query && (
-          <div id="searchResults">
-            {error.general && <p className="error">{error.general}</p>}
-            {error.walmart && (
-              <div className="error-box walmart-error">
-                <h3>Walmart Results Unavailable</h3>
-                <p>{error.walmart}</p>
-                <p>We're working on resolving this issue. In the meantime, you can still view Amazon results.</p>
-              </div>
-            )}
-            {error.amazon && (
-              <div className="error-box amazon-error">
-                <h3>Amazon Results Unavailable</h3>
-                <p>{error.amazon}</p>
-                <p>We're working on resolving this issue. In the meantime, you can still view Walmart results.</p>
-              </div>
-            )}
-            {!loading.amazon && !loading.walmart && displayedResults.amazon.length === 0 && displayedResults.walmart.length === 0 && (
-              <p className="no-results">No results found. Try another search.</p>
-            )}
-            <div className="results-container">
-              {(source === 'all' || source === 'amazon') && (
-                <div className="column rainforest-results">
-                  <div className="column-header">Amazon Results</div>
-                  <div className="results-scroll">
-                    {loading.amazon ? <p>Searching Amazon</p> : renderResults(displayedResults.amazon, 'Amazon')}
-                  </div>
-                </div>
-              )}
-              {(source === 'all' || source === 'walmart') && (
-                <div className="column bluecart-results">
-                  <div className="column-header">Walmart Results</div>
-                  <div className="results-scroll">
-                    {loading.walmart ? <p>Searching Walmart</p> : renderResults(displayedResults.walmart, 'Walmart')}
-                  </div>
-                </div>
-              )}
-            </div>
+          <div className="results-container">
+            {(source === 'all' || source === 'amazon') && renderResultsColumn('Amazon')}
+            {(source === 'all' || source === 'walmart') && renderResultsColumn('Walmart')}
           </div>
         )}
-        {query && !loading.amazon && !loading.walmart && (displayedResults.amazon.length > 0 || displayedResults.walmart.length > 0) && (
+        {query && !loading.amazon && !loading.walmart && displayedResults.amazon.length === 0 && displayedResults.walmart.length === 0 && (
+          <p className="no-results">No results found. Try another search.</p>
+        )}
+        {shouldShowPagination() && (
           <div className="pagination">
             <button onClick={() => handlePageChange(page - 1)} disabled={page === 1}>Previous</button>
             <span>Page {page} of {Math.max(totalPages.amazon, totalPages.walmart)}</span>

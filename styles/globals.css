@@ -3,7 +3,6 @@
 * {
     box-sizing: border-box;
     padding: 0;
-    font-family: 'Open Sans', sans-serif;
     margin: 0;
 }
 
@@ -12,12 +11,7 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
-}
-
-body {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    font-family: 'Open Sans', sans-serif;
     overflow: hidden;
 }
 
@@ -26,24 +20,39 @@ body {
     flex-direction: column;
     height: 100vh;
     width: 100%;
-    position: relative;
     overflow: hidden;
 }
 
-header, footer {
-    flex-shrink: 0;
-}
-
 .container {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    width: 100%; 
+    width: 100%;
     padding: 5px;
     box-sizing: border-box;
     overflow: hidden;
 }
 
+/* Header and Logo styles */
+.global-header {
+    width: 100%;
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+}
+
+.global-header .logo {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+.global-header .logo img {
+    max-width: 100px;
+    height: auto;
+}
+
+/* Search form styles */
 .search-form {
     width: 100%;
     max-width: 600px;
@@ -52,6 +61,7 @@ header, footer {
     justify-content: center;
     align-items: center;
     margin: 10px auto;
+    padding: 10px;
 }
 
 .search-input-container {
@@ -109,36 +119,19 @@ header, footer {
     cursor: pointer;
 }
 
-#searchResults {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    text-align: center;
-    gap: 10px;
-    padding: 10px;
-    overflow: hidden;
-    flex-grow: 1;
-}
-
-.loading,
-.error,
-.no-results {
-    text-align: center;
-    font-size: 14px;
-    margin: 20px 0;
-}
-
+/* Results styles */
 .results-container {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     gap: 20px;
     padding: 10px;
-    overflow: hidden;
-    flex-grow: 1;
+    overflow-y: auto;
+    flex: 1;
 }
 
 .column {
     flex: 1;
+    min-height: 300px;
     display: flex;
     flex-direction: column;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -152,13 +145,10 @@ header, footer {
     padding: 10px;
     font-weight: bold;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    position: sticky;
-    top: 0;
-    z-index: 1;
 }
 
 .results-scroll {
-    flex-grow: 1;
+    flex: 1;
     overflow-y: auto;
     padding: 10px;
 }
@@ -170,8 +160,6 @@ header, footer {
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     background-color: #fff;
-    height: 180px;
-    overflow: hidden;
 }
 
 .result-item .image {
@@ -224,13 +212,7 @@ header, footer {
     font-size: 12px;
 }
 
-.global-header .logo img {
-    height: 60px;
-    width: auto;
-    margin: 10px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-}
-
+/* Pagination styles */
 .pagination {
     display: flex;
     justify-content: center;
@@ -238,7 +220,6 @@ header, footer {
     padding: 20px 0;
     background-color: #fff;
     width: 100%;
-    flex-shrink: 0;
 }
 
 .pagination button {
@@ -256,22 +237,14 @@ header, footer {
     cursor: not-allowed;
 }
 
+/* Footer styles */
 .global-footer {
-    font-size: 8px;
     width: 100%;
+    font-size: 8px;
     padding: 10px;
     text-align: center;
     background-color: #fff;
-    height: 60px;
     border-top: 0.5px solid rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
-}
-
-.footer-nav a {
-    text-decoration: underline;
-    color: #333;
-    font-size: 12px;
-    margin: 10px;
 }
 
 .affiliate-disclaimer {
@@ -281,6 +254,7 @@ header, footer {
     margin-top: 12px;
 }
 
+/* Error styles */
 .error-box {
     background-color: #fff3cd;
     border: 1px solid #ffeeba;
@@ -315,31 +289,52 @@ header, footer {
     color: #004085;
 }
 
+.loading,
+.error,
+.no-results {
+    text-align: center;
+    font-size: 14px;
+    margin: 20px 0;
+}
+
+/* Media Queries */
+@media (min-width: 769px) {
+    .results-container {
+        flex-direction: row;
+    }
+
+    .column {
+        width: calc(50% - 10px);
+    }
+}
+
 @media (max-width: 768px) {
-    body {
-        overflow: auto;
+    .global-header .logo img {
+        max-width: 100px;
     }
 
-    .page-container {
-        height: auto;
-        min-height: 100vh;
-        overflow: visible;
+    .search-form {
+        padding: 5px;
     }
 
-    .container {
-        overflow: visible;
+    .search-input-container {
+        margin-bottom: 5px;
     }
 
-    #searchResults {
-        overflow-y: visible;
+    .search-input, .search-button {
+        height: 36px;
     }
 
     .search-modifiers {
         flex-direction: row;
+        justify-content: space-between;
     }
 
     .modifier-select {
         width: 48%;
+        font-size: 11px;
+        padding: 2px 5px;
+        height: 36px;
     }
 
     .results-container {
@@ -347,73 +342,106 @@ header, footer {
     }
 
     .column {
-        max-height: none;
-    }
-    
-    .results-scroll {
-        overflow-y: visible;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-
-    .result-item {
-        flex: 0 0 calc(50% - 10px);
-        height: auto;
-        max-height: none;
-        flex-direction: column;
-        margin-bottom: 20px;
-    }
-
-    .result-item .image {
         width: 100%;
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-
-    .result-item .image img {
-        max-width: 100px;
-        margin: 0 auto;
-    }
-
-    .pagination {
-        flex-wrap: wrap;
-    }
-
-    .pagination button {
-        flex: 1 0 40%;
-        margin: 5px;
-    }
-
-    .global-footer {
-        height: auto;
+        margin-bottom: 20px;
     }
 }
 
 @media (max-width: 480px) {
+    .global-header .logo img {
+        max-width: 120px;
+    }
+
+    .search-form {
+        margin: 5px auto;
+    }
+
+    .search-input, .search-button {
+        height: 34px;
+    }
+
+    .search-button {
+        padding: 0 15px;
+    }
+
+    .search-modifiers {
+        margin-top: 5px;
+    }
+
+    .modifier-select {
+        width: 48%;
+        font-size: 10px;
+        padding: 2px 5px;
+        height: 34px;
+    }
+
+    .affiliate-disclaimer {
+        font-size: 8px;
+        margin-top: 5px;
+    }
+
+    .results-container {
+        padding: 5px 0;
+    }
+
+    .column-header {
+        font-size: 14px;
+        padding: 5px;
+    }
+
     .result-item {
-        flex: 0 0 100%;
+        margin-bottom: 10px;
+        padding: 5px;
     }
 
-    .result-image {
-        width: 50px;
-        height: 50px;
+    .result-item .image {
+        width: 80px;
     }
 
-    .result-title {
+    .result-item .title {
+        font-size: 14px;
+    }
+
+    .result-item .price,
+    .result-item .rating {
         font-size: 12px;
     }
 
-    .result-price, .result-rating {
+    .result-item .link a {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+
+    .pagination {
+        padding: 10px 0;
+    }
+
+    .pagination button {
+        font-size: 12px;
+        padding: 5px 10px;
+    }
+}
+
+@media (max-width: 390px) {
+    /* iPhone 12 Pro specific styles */
+    .global-header .logo img {
+        max-width: 100px;
+    }
+
+    .search-input {
         font-size: 12px;
     }
 
-    .result-link {
-        font-size: 12px;
-        padding: 6px 10px;
+    .search-button {
+        font-size: 11px;
+        padding: 0 10px;
     }
 
-    .source-header {
-        font-size: 16px;
+    .modifier-select {
+        font-size: 9px;
+    }
+
+    .column {
+        min-height: 250px;
     }
 }
