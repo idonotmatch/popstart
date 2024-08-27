@@ -2,7 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
+import ResultItem from '../../components/ResultItem';
+import CartSummary from '../../components/CartSummary';
+import ToastContainer from '../../components/ToastContainer';
+import Cart from '../../components/cart';
 import { useSearch } from '../../context/SearchContext';
+import { useCart } from '../../context/CartContext';
 
 function SearchPage() {
   const router = useRouter();
@@ -16,8 +21,29 @@ function SearchPage() {
   const [displayedResults, setDisplayedResults] = useState({ amazon: [], walmart: [] });
   const [totalPages, setTotalPages] = useState({ amazon: 1, walmart: 1 });
   const [error, setError] = useState({});
+  const [toasts, setToasts] = useState([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const { setSearchResults, getSearchResults } = useSearch();
+  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
+
+  const addToast = (message) => {
+    const id = Date.now();
+    setToasts((prevToasts) => [...prevToasts, { id, message }]);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
+  };
+
+  const handleAddToCart = (item) => {
+    addToCart(item);
+    addToast(`${item.title.slice(0, 30)}${item.title.length > 30 ? '...' : ''} added to cart`);
+  };
+
+  const handleCartToggle = () => {
+    setIsCartOpen(prevState => !prevState);
+  };
 
   const fetchResults = useCallback(async () => {
     if (!query) return;
@@ -100,20 +126,19 @@ function SearchPage() {
   };
 
   const renderResultsColumn = (source) => {
-    const isAmazon = source === 'Amazon';
-    const results = isAmazon ? displayedResults.amazon : displayedResults.walmart;
-    const isLoading = isAmazon ? loading.amazon : loading.walmart;
-    const errorMessage = isAmazon ? error.amazon : error.walmart;
+    const results = source === 'amazon' ? displayedResults.amazon : displayedResults.walmart;
+    const isLoading = source === 'amazon' ? loading.amazon : loading.walmart;
+    const errorMessage = source === 'amazon' ? error.amazon : error.walmart;
 
     return (
-      <div className={`column ${isAmazon ? 'rainforest-results' : 'bluecart-results'}`}>
-        <div className="column-header">{source} Results</div>
+      <div className={`column ${source}-results`}>
+        <div className="column-header">{source.charAt(0).toUpperCase() + source.slice(1)} Results</div>
         <div className="results-scroll">
           {isLoading ? (
             <p>Searching {source}</p>
           ) : errorMessage ? (
-            <div className={`error-box ${isAmazon ? 'amazon-error' : 'walmart-error'}`}>
-              <h3>{source} Results Unavailable</h3>
+            <div className={`error-box ${source}-error`}>
+              <h3>{source.charAt(0).toUpperCase() + source.slice(1)} Results Unavailable</h3>
               <p>{errorMessage}</p>
               <p>We're working on resolving this issue. In the meantime, you can still view other results.</p>
             </div>
@@ -121,24 +146,12 @@ function SearchPage() {
             <p className="no-results">No {source} results found.</p>
           ) : (
             results.map((item, index) => (
-              <div key={index} className="result-item">
-                <div className="image"><img src={item.image} alt={item.title || 'Product image'} /></div>
-                <div className="details">
-                  <div className="title">
-                    <p title={item.title} className={`${item.title && item.title.length > 80 ? 'tooltip' : ''}`}>
-                      {item.title ? (item.title.length > 80 ? `${item.title.slice(0, 80)}...` : item.title) : 'Title not available'}
-                    </p>
-                  </div>
-                  <div className="rating">
-                    <p>
-                      Rating: {item.rating !== '0.0' ? item.rating : 'Not Found'} 
-                      {item.ratingsTotal > 0 ? ` (${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'})` : ' (No reviews)'}
-                    </p>
-                  </div>
-                  <div className="price"><p>Price: {item.price || 'Not Found'}</p></div>
-                  <div className="link"><a href={item.link} target="_blank" rel="noreferrer">Shop {source}</a></div>
-                </div>
-              </div>
+              <ResultItem 
+                key={index} 
+                item={item} 
+                addToast={addToast}
+                onAddToCart={handleAddToCart}
+              />
             ))
           )}
         </div>
@@ -156,6 +169,10 @@ function SearchPage() {
   return (
     <div className="page-container">
       <Header />
+      <CartSummary 
+        cartItemCount={cart.items.length}
+        onCartClick={handleCartToggle}
+      />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-input-container">
@@ -197,8 +214,8 @@ function SearchPage() {
         {error.general && <p className="error">{error.general}</p>}
         {query && (
           <div className="results-container">
-            {(source === 'all' || source === 'amazon') && renderResultsColumn('Amazon')}
-            {(source === 'all' || source === 'walmart') && renderResultsColumn('Walmart')}
+            {(source === 'all' || source === 'amazon') && renderResultsColumn('amazon')}
+            {(source === 'all' || source === 'walmart') && renderResultsColumn('walmart')}
           </div>
         )}
         {query && !loading.amazon && !loading.walmart && displayedResults.amazon.length === 0 && displayedResults.walmart.length === 0 && (
@@ -212,6 +229,15 @@ function SearchPage() {
           </div>
         )}
       </div>
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
+      {isCartOpen && (
+        <Cart
+          items={cart.items}
+          onClose={handleCartToggle}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeFromCart}
+        />
+      )}
       <Footer />
     </div>
   );

@@ -1,3 +1,4 @@
+// File: pages/_app.js
 import React, { useEffect } from 'react';
 import { ApolloProvider } from '@apollo/client';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
@@ -5,7 +6,8 @@ import ReactGA4 from 'react-ga4';
 import { useRouter } from 'next/router';
 import '../styles/globals.css';
 import { SearchProvider } from '../context/SearchContext';
-import Layout from '../components/Layout'; // Import the Layout component
+import { CartProvider } from '../context/CartContext'; // Import CartProvider
+import Layout from '../components/Layout';
 
 // Setup Apollo Client
 const client = new ApolloClient({
@@ -37,9 +39,11 @@ function MyApp({ Component, pageProps }) {
   return (
     <ApolloProvider client={client}>
       <SearchProvider>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
+        <CartProvider>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </CartProvider>
       </SearchProvider>
     </ApolloProvider>
   );
