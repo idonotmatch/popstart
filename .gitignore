@@ -3,3 +3,6 @@ archive/
 .env.local
 # Local Netlify folder
 .netlify
+lib/apollo-client.js
+lib/upstashRedis.js
+lib/cacheHelper.js
