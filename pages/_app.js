@@ -6,7 +6,7 @@ import ReactGA4 from 'react-ga4';
 import { useRouter } from 'next/router';
 import '../styles/globals.css';
 import { SearchProvider } from '../context/SearchContext';
-import { CartProvider } from '../context/CartContext'; // Import CartProvider
+import { ListProvider } from '../context/ListContext'; // Import ListProvider instead of CartProvider
 import Layout from '../components/Layout';
 
 // Setup Apollo Client
@@ -39,11 +39,11 @@ function MyApp({ Component, pageProps }) {
   return (
     <ApolloProvider client={client}>
       <SearchProvider>
-        <CartProvider>
+        <ListProvider>
           <Layout>
             <Component {...pageProps} />
           </Layout>
-        </CartProvider>
+        </ListProvider>
       </SearchProvider>
     </ApolloProvider>
   );

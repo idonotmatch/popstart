@@ -3,11 +3,11 @@ import { useRouter } from 'next/router';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
 import ResultItem from '../../components/ResultItem';
-import CartSummary from '../../components/CartSummary';
+import CartSummary from '../../components/ListSummary';
 import ToastContainer from '../../components/ToastContainer';
 import Cart from '../../components/cart';
 import { useSearch } from '../../context/SearchContext';
-import { useCart } from '../../context/CartContext';
+import { useList } from '../../context/ListContext';
 
 function SearchPage() {
   const router = useRouter();
@@ -22,10 +22,10 @@ function SearchPage() {
   const [totalPages, setTotalPages] = useState({ amazon: 1, walmart: 1 });
   const [error, setError] = useState({});
   const [toasts, setToasts] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isListOpen, setIsListOpen] = useState(false);
 
   const { setSearchResults, getSearchResults } = useSearch();
-  const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
+  const { list, addToList, removeFromList, updateQuantity } = useList();
 
   const addToast = (message) => {
     const id = Date.now();
@@ -36,13 +36,13 @@ function SearchPage() {
     setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
   };
 
-  const handleAddToCart = (item) => {
-    addToCart(item);
-    addToast(`${item.title.slice(0, 30)}${item.title.length > 30 ? '...' : ''} added to cart`);
+  const handleAddToList = (item) => {
+    addToList(item);
+    addToast(`${item.title.slice(0, 30)}${item.title.length > 30 ? '...' : ''} added to list`);
   };
 
-  const handleCartToggle = () => {
-    setIsCartOpen(prevState => !prevState);
+  const handleListToggle = () => {
+    setIsListOpen(prevState => !prevState);
   };
 
   const fetchResults = useCallback(async () => {
@@ -150,7 +150,7 @@ function SearchPage() {
                 key={index} 
                 item={item} 
                 addToast={addToast}
-                onAddToCart={handleAddToCart}
+                onAddToCart={handleAddToList}  // Changed to handleAddToList
               />
             ))
           )}
@@ -170,8 +170,8 @@ function SearchPage() {
     <div className="page-container">
       <Header />
       <CartSummary 
-        cartItemCount={cart.items.length}
-        onCartClick={handleCartToggle}
+        cartItemCount={list.items.length}
+        onCartClick={handleListToggle}
       />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">
@@ -230,12 +230,12 @@ function SearchPage() {
         )}
       </div>
       <ToastContainer toasts={toasts} removeToast={removeToast} />
-      {isCartOpen && (
+      {isListOpen && (
         <Cart
-          items={cart.items}
-          onClose={handleCartToggle}
+          items={list.items}
+          onClose={handleListToggle}
           onUpdateQuantity={updateQuantity}
-          onRemoveItem={removeFromCart}
+          onRemoveItem={removeFromList}
         />
       )}
       <Footer />

@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useCart } from '../context/CartContext';
+import { useList } from '../context/ListContext';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import Image from 'next/image';
 
-const CartPage = () => {
-  const { cart, updateQuantity, removeFromCart, addNote, refreshCart, lastRefresh } = useCart();
+const ListPage = () => {
+  const { list, updateQuantity, removeFromList, addNote, refreshList, lastRefresh } = useList();
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const initialRefreshDone = useRef(false);
 
   useEffect(() => {
     if (!initialRefreshDone.current) {
-      refreshCart();
+      refreshList();
       initialRefreshDone.current = true;
     }
-  }, [refreshCart]);
+  }, [refreshList]);
 
   const ImageWithFallback = ({ src, alt, width, height }) => {
     try {
@@ -45,13 +45,13 @@ const CartPage = () => {
       sortableItems.sort((a, b) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
-  
+
         // Special handling for price
         if (sortConfig.key === 'price') {
           aValue = parseFloat(aValue.replace(/[^0-9.-]+/g,""));
           bValue = parseFloat(bValue.replace(/[^0-9.-]+/g,""));
         }
-  
+
         if (aValue < bValue) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -82,32 +82,32 @@ const CartPage = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    await refreshCart();
+    await refreshList();
     setIsRefreshing(false);
   };
 
-  const sortedItems = useMemo(() => sortItems(cart.items, sortConfig), [cart.items, sortConfig, sortItems]);
+  const sortedItems = useMemo(() => sortItems(list.items, sortConfig), [list.items, sortConfig, sortItems]);
 
-  const totalItems = useMemo(() => cart.items.reduce((sum, item) => sum + item.quantity, 0), [cart.items]);
+  const totalItems = useMemo(() => list.items.reduce((sum, item) => sum + item.quantity, 0), [list.items]);
   const totalPrice = useMemo(() => 
-    cart.items.reduce((sum, item) => sum + parseFloat(calculateSubtotal(item.price, item.lastVerifiedPrice, item.quantity)), 0).toFixed(2),
-    [cart.items, calculateSubtotal]
+    list.items.reduce((sum, item) => sum + parseFloat(calculateSubtotal(item.price, item.lastVerifiedPrice, item.quantity)), 0).toFixed(2),
+    [list.items, calculateSubtotal]
   );
 
   return (
     <div className="page-container">
       <Header />
-      <main className="cart-page">
-        <h1>Your Cart</h1>
+      <main className="list-page">
+        <h1>Your List</h1>
         <button onClick={handleRefresh} disabled={isRefreshing}>
-          {isRefreshing ? 'Refreshing...' : 'Refresh Cart'}
+          {isRefreshing ? 'Refreshing...' : 'Refresh List'}
         </button>
         {lastRefresh && <p>Last refreshed: {new Date(lastRefresh).toLocaleString()}</p>}
-        {cart.items.length === 0 ? (
-          <p>Your cart is empty</p>
+        {list.items.length === 0 ? (
+          <p>Your list is empty</p>
         ) : (
-          <div className="cart-table-container">
-            <table className="cart-table">
+          <div className="list-table-container">
+            <table className="list-table">
               <thead>
                 <tr>
                   <th>Image</th>
@@ -153,7 +153,7 @@ const CartPage = () => {
                         className="remove-link" 
                         onClick={(e) => {
                           e.preventDefault();
-                          removeFromCart(item.uniqueId);
+                          removeFromList(item.uniqueId);
                         }}
                       >
                         Remove
@@ -179,8 +179,8 @@ const CartPage = () => {
             </table>
           </div>
         )}
-        <div className="cart-summary">
-          <h2>Cart Summary</h2>
+        <div className="list-summary">
+          <h2>List Summary</h2>
           <p>Total Items: {formatNumber(totalItems)}</p>
           <p>Total Price: ${formatNumber(parseFloat(totalPrice))}</p>
         </div>
@@ -190,4 +190,4 @@ const CartPage = () => {
   );
 };
 
-export default CartPage;
+export default ListPage;
