@@ -10,7 +10,7 @@ const AddToCartButton = ({ item, addToast }) => {
     addToCart(item);
     setIsAdded(true);
     addToast(`${item.title} added to cart`);
-    setTimeout(() => setIsAdded(false), 2000); // Reset after 2 seconds
+    setTimeout(() => setIsAdded(false), 3000); // Reset after 2 seconds
   };
 
   return (

@@ -11,8 +11,10 @@ const CartSummary = () => {
   return (
     <div className="cart-summary">
       <Link href="/cart" className="cart-summary-link">
-        <span>{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
-        <span>${totalPrice.toFixed(2)}</span>
+        <div className="cart-summary-content">
+          <span>{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
+          <span className="cart-summary-price">${totalPrice.toFixed(2)}</span>
+        </div>
       </Link>
     </div>
   );
