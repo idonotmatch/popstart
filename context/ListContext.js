@@ -45,22 +45,26 @@ export const ListProvider = ({ children }) => {
 
   const addToList = useCallback((newItem) => {
     setList((prevList) => {
-      const uniqueId = generateUniqueId(newItem);
-      const existingItemIndex = prevList.items.findIndex(item => item.uniqueId === uniqueId);
+      // Check if the item already exists in the list
+      const existingItemIndex = prevList.items.findIndex(item => 
+        item.id === newItem.id && item.source === newItem.source
+      );
 
       if (existingItemIndex !== -1) {
+        // If item exists, increase its quantity
         const updatedItems = prevList.items.map((item, index) => 
           index === existingItemIndex 
-            ? { ...item, quantity: (item.quantity || 0) + 1 }
+            ? { ...item, quantity: (item.quantity || 1) + 1 }
             : item
         );
         return { ...prevList, items: updatedItems };
       } else {
+        // If it's a new item, add it to the list
         return {
           ...prevList,
           items: [...prevList.items, { 
             ...newItem, 
-            uniqueId, 
+            uniqueId: generateUniqueId(newItem),
             quantity: 1, 
             originalPrice: newItem.price,
             lastVerifiedPrice: newItem.price,
