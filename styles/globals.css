@@ -882,3 +882,99 @@ html, body {
     justify-content: center;
     align-items: center;
   }
+
+  /* Existing global styles */
+/* ... */
+
+/* List Page Styles */
+.list-page-container {
+    padding: 20px;
+  }
+  
+  .list-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .styled-button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .styled-button:disabled {
+    background-color: #cccccc;
+  }
+  
+  .list-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .list-table th,
+  .list-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .list-table th {
+    background-color: #f2f2f2;
+    cursor: pointer;
+  }
+  
+  .quantity-input {
+    width: 3ch;
+  }
+  
+  .price-change {
+    font-size: 0.8em;
+  }
+  
+  .price-change.increase {
+    color: green;
+  }
+  
+  .price-change.decrease {
+    color: red;
+  }
+  
+  /* Image Modal Styles */
+  .image-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .image-modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+  }
+  
+  .image-modal-img {
+    max-width: 100%;
+    max-height: 80vh;
+  }
+  
+  .image-modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+  }
+  
+  /* Add any other styles you need */

@@ -153,16 +153,15 @@ export const ListProvider = ({ children }) => {
     const updatedItems = await Promise.all(list.items.map(async (item) => {
       try {
         const source = item.source || (item.link?.includes('amazon.com') ? 'amazon' : 'walmart');
-        const url = `https://api.scraperapi.com/structured/${source}/search`;
-        const params = {
-          api_key: process.env.NEXT_PUBLIC_SCRAPER_API_KEY,
+        const url = '/api/refresh-item';
+        console.log(`Refreshing item: ${item.title}, Source: ${source}`);
+        const response = await axios.post(url, {
+          source,
           query: item.title,
           country: 'us'
-        };
+        });
 
-        console.log(`Fetching data for item: ${item.title}`);
-        const response = await axios.get(url, { params });
-        const newData = response.data.results[0];
+        const newData = response.data;
 
         if (newData && newData.price) {
           console.log(`Updated price for ${item.title}: ${newData.price}`);
@@ -176,31 +175,27 @@ export const ListProvider = ({ children }) => {
           return item;
         }
       } catch (error) {
-        console.error(`Error refreshing item ${item.title}:`, error);
+        console.error(`Error refreshing item ${item.title}:`, error.response ? error.response.data : error.message);
         return item; // Return the original item if there's an error
       }
     }));
 
     console.log('Updated items after refresh:', updatedItems);
-    if (updatedItems.length > 0) {
-      setList(prevList => {
-        const newList = { ...prevList, items: updatedItems };
-        console.log('New list after refresh:', newList);
-        return newList;
-      });
-      setLastRefresh(new Date().toISOString());
+    setList(prevList => {
+      const newList = { ...prevList, items: updatedItems };
+      console.log('New list after refresh:', newList);
+      return newList;
+    });
+    setLastRefresh(new Date().toISOString());
 
-      // Update localStorage
-      const listData = {
-        data: { items: updatedItems },
-        expiration: Date.now() + 30 * 24 * 60 * 60 * 1000,
-        lastRefresh: new Date().toISOString()
-      };
-      localStorage.setItem('list', JSON.stringify(listData));
-      console.log('Updated localStorage after refresh');
-    } else {
-      console.log('No items were updated during refresh');
-    }
+    // Update localStorage
+    const listData = {
+      data: { items: updatedItems },
+      expiration: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      lastRefresh: new Date().toISOString()
+    };
+    localStorage.setItem('list', JSON.stringify(listData));
+    console.log('Updated localStorage after refresh');
   }, [list.items]);
 
   const clearList = useCallback(() => {
