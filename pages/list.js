@@ -4,11 +4,22 @@ import Header from '../components/header';
 import Footer from '../components/footer';
 import Image from 'next/image';
 
+// Image Modal Component
+const ImageModal = ({ src, alt, onClose }) => (
+  <div className="image-modal-overlay" onClick={onClose}>
+    <div className="image-modal-content" onClick={e => e.stopPropagation()}>
+      <img src={src} alt={alt} className="image-modal-img" />
+      <button className="image-modal-close" onClick={onClose}>&times;</button>
+    </div>
+  </div>
+);
+
 const ListPage = () => {
   const { list, updateQuantity, removeFromList, addNote, refreshList, lastRefresh } = useList();
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const initialRefreshDone = useRef(false);
+  const [modalImage, setModalImage] = useState(null);
 
   useEffect(() => {
     if (!initialRefreshDone.current) {
@@ -17,11 +28,46 @@ const ListPage = () => {
     }
   }, [refreshList]);
 
-  const ImageWithFallback = ({ src, alt, width, height }) => {
+  const getEnlargedWalmartImage = (url) => {
     try {
-      return <Image src={src} alt={alt} width={width} height={height} />
+      const parsedUrl = new URL(url);
+      parsedUrl.pathname = parsedUrl.pathname.replace(/\/\d+x\d+\./, '/');
+      parsedUrl.searchParams.set('odnHeight', '450');
+      parsedUrl.searchParams.set('odnWidth', '450');
+      parsedUrl.searchParams.set('odnBg', 'FFFFFF');
+      return parsedUrl.toString();
     } catch (error) {
-      return <img src={src} alt={alt} style={{ width, height, objectFit: 'contain' }} />
+      console.error('Error parsing Walmart image URL:', error);
+      return url;
+    }
+  };
+
+  const ImageWithFallback = ({ src, alt, width, height, item }) => {
+    const [imageSrc, setImageSrc] = useState(src);
+
+    useEffect(() => {
+      if (item.source === 'walmart') {
+        setImageSrc(getEnlargedWalmartImage(src));
+      }
+    }, [src, item.source]);
+
+    const handleImageClick = () => {
+      const modalSrc = item.source === 'walmart' ? getEnlargedWalmartImage(src) : src;
+      setModalImage({ src: modalSrc, alt });
+    };
+
+    try {
+      return (
+        <div onClick={handleImageClick} style={{ cursor: 'pointer' }}>
+          <Image src={imageSrc} alt={alt} width={width} height={height} />
+        </div>
+      );
+    } catch (error) {
+      return (
+        <div onClick={handleImageClick} style={{ cursor: 'pointer' }}>
+          <img src={imageSrc} alt={alt} style={{ width, height, objectFit: 'contain' }} />
+        </div>
+      );
     }
   }
 
@@ -29,8 +75,8 @@ const ListPage = () => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   }
 
-  const calculateSubtotal = useCallback((price, verifiedPrice, quantity) => {
-    const numericPrice = parseFloat((verifiedPrice || price).replace(/[^0-9.-]+/g,""));
+  const calculateSubtotal = useCallback((price, quantity) => {
+    const numericPrice = parseFloat((price || '0').replace(/[^0-9.-]+/g,""));
     return (numericPrice * quantity).toFixed(2);
   }, []);
 
@@ -46,10 +92,9 @@ const ListPage = () => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
 
-        // Special handling for price
-        if (sortConfig.key === 'price') {
-          aValue = parseFloat(aValue.replace(/[^0-9.-]+/g,""));
-          bValue = parseFloat(bValue.replace(/[^0-9.-]+/g,""));
+        if (sortConfig.key === 'price' || sortConfig.key === 'lastVerifiedPrice') {
+          aValue = parseFloat((aValue || '0').replace(/[^0-9.-]+/g,""));
+          bValue = parseFloat((bValue || '0').replace(/[^0-9.-]+/g,""));
         }
 
         if (aValue < bValue) {
@@ -90,7 +135,7 @@ const ListPage = () => {
 
   const totalItems = useMemo(() => list.items.reduce((sum, item) => sum + item.quantity, 0), [list.items]);
   const totalPrice = useMemo(() => 
-    list.items.reduce((sum, item) => sum + parseFloat(calculateSubtotal(item.price, item.lastVerifiedPrice, item.quantity)), 0).toFixed(2),
+    list.items.reduce((sum, item) => sum + parseFloat(calculateSubtotal(item.lastVerifiedPrice || item.price, item.quantity)), 0).toFixed(2),
     [list.items, calculateSubtotal]
   );
 
@@ -113,7 +158,8 @@ const ListPage = () => {
                   <th>Image</th>
                   <th onClick={() => requestSort('title')}>Item{getSortIndicator('title')}</th>
                   <th onClick={() => requestSort('price')}>Original Price{getSortIndicator('price')}</th>
-                  <th>Last Verified Price</th>
+                  <th onClick={() => requestSort('lastVerifiedPrice')}>Last Verified Price{getSortIndicator('lastVerifiedPrice')}</th>
+                  <th>Last Updated</th>
                   <th onClick={() => requestSort('quantity')}>Quantity{getSortIndicator('quantity')}</th>
                   <th>Subtotal</th>
                   <th onClick={() => requestSort('rating')}>Avg. Rating{getSortIndicator('rating')}</th>
@@ -128,18 +174,25 @@ const ListPage = () => {
                 {sortedItems.map((item) => (
                   <tr key={item.uniqueId}>
                     <td>
-                      <ImageWithFallback src={item.image} alt={item.title} width={50} height={50} />
+                      <ImageWithFallback 
+                        src={item.image} 
+                        alt={item.title} 
+                        width={50} 
+                        height={50} 
+                        item={item}
+                      />
                     </td>
                     <td>{item.title}</td>
-                    <td>{item.price}</td>
+                    <td>{item.originalPrice}</td>
                     <td>
-                      {item.lastVerifiedPrice || 'Not verified'}
-                      {item.lastVerifiedDate && (
-                        <div className="verified-date">
-                          Verified: {new Date(item.lastVerifiedDate).toLocaleString()}
-                        </div>
+                      {item.lastVerifiedPrice}
+                      {item.lastVerifiedPrice !== item.originalPrice && (
+                        <span className={item.lastVerifiedPrice > item.originalPrice ? 'price-increase' : 'price-decrease'}>
+                          {item.lastVerifiedPrice > item.originalPrice ? '▲' : '▼'}
+                        </span>
                       )}
                     </td>
+                    <td>{new Date(item.lastUpdated).toLocaleString()}</td>
                     <td>
                       <input
                         type="number"
@@ -159,7 +212,7 @@ const ListPage = () => {
                         Remove
                       </a>
                     </td>
-                    <td>${calculateSubtotal(item.price, item.lastVerifiedPrice, item.quantity)}</td>
+                    <td>${calculateSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity)}</td>
                     <td>{item.rating || 'N/A'}</td>
                     <td>{item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'N/A'}</td>
                     <td>{item.brand || 'N/A'}</td>
@@ -186,6 +239,13 @@ const ListPage = () => {
         </div>
       </main>
       <Footer />
+      {modalImage && (
+        <ImageModal
+          src={modalImage.src}
+          alt={modalImage.alt}
+          onClose={() => setModalImage(null)}
+        />
+      )}
     </div>
   );
 };

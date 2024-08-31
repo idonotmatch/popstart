@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
 const ListContext = createContext();
 
@@ -61,8 +62,9 @@ export const ListProvider = ({ children }) => {
             ...newItem, 
             uniqueId, 
             quantity: 1, 
+            originalPrice: newItem.price,
             lastVerifiedPrice: newItem.price,
-            lastVerifiedDate: new Date().toISOString()
+            lastUpdated: new Date().toISOString()
           }]
         };
       }
@@ -103,19 +105,30 @@ export const ListProvider = ({ children }) => {
   }, []);
 
   const refreshListItem = async (item) => {
-    // This is where you'd fetch the latest data for the item
-    // For now, we'll simulate an API call that returns the same price
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate updated data
-        const updatedItem = {
-          ...item,
-          lastVerifiedPrice: item.price,
-          lastVerifiedDate: new Date().toISOString()
-        };
-        resolve(updatedItem);
-      }, 500); // Simulate network delay
-    });
+    try {
+      const source = item.source || (item.link?.includes('amazon.com') ? 'amazon' : 'walmart');
+      const url = `https://api.scraperapi.com/structured/${source}/search`;
+      const params = {
+        api_key: process.env.SCRAPER_API_KEY,
+        query: item.title,
+        country: 'us'
+      };
+
+      const response = await axios.get(url, { params });
+      const newData = response.data.results[0]; // Assuming the first result is the most relevant
+
+      return {
+        ...item,
+        lastVerifiedPrice: newData.price || item.price,
+        lastUpdated: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error refreshing item:', error);
+      return {
+        ...item,
+        lastUpdated: new Date().toISOString()
+      };
+    }
   };
 
   const refreshList = useCallback(async () => {
