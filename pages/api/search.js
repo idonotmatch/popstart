@@ -1,5 +1,6 @@
 import axios from 'axios';
 import Redis from 'ioredis';
+import { Pool } from 'pg';
 
 // Initialize Redis client with fallback
 let redisClient;
@@ -15,6 +16,26 @@ try {
 } catch (error) {
   console.warn('Failed to initialize Redis:', error);
   redisClient = null;
+}
+
+// Initialize PostgreSQL connection pool
+let pool;
+try {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  });
+
+  // Test the connection
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('Error connecting to the database:', err);
+    } else {
+      console.log('Successfully connected to the database');
+    }
+  });
+} catch (error) {
+  console.error('Failed to initialize database pool:', error);
 }
 
 // Cache helper function
@@ -41,11 +62,11 @@ const cacheHelper = {
 };
 
 const mapProduct = (item, source) => {
+  console.log(`Mapping product from ${source}:`, JSON.stringify(item, null, 2));
+
   if (source === 'walmart') {
-    // Add more detailed logging for Walmart item structure
-    console.log('Walmart item structure:', JSON.stringify(item, null, 2));
     return {
-      asin: item.id || '',
+      id: item.id || '',
       brand: item.brand || 'N/A',
       title: item.name || '',
       link: item.url || '',
@@ -57,21 +78,29 @@ const mapProduct = (item, source) => {
       availability: item.availability || "Unavailable",
       source: 'walmart',
       sponsored: item.sponsored || false,
+      full_description: item.full_description || '',
+      product_category: item.product_category || '',
+      model: item.model || '',
+      small_description: item.small_description || ''
     };
   } else if (source === 'amazon') {
     return {
       asin: item.asin || '',
       brand: item.brand || 'N/A',
-      title: item.name || '',
-      link: item.url || '',
-      image: item.image || '',
-      isPrime: item.has_prime || false,
-      rating: item.stars ? Number(item.stars).toFixed(1) : '0.0',
-      ratingsTotal: item.total_reviews || 0,
-      price: item.price ? `$${Number(item.price).toFixed(2)}` : "N/A",
+      title: item.name || item.title || '',
+      link: item.url || item.link || '',
+      image: item.image || (item.images && item.images[0]) || '',
+      isPrime: item.has_prime || item.isPrime || false,
+      rating: item.stars || item.average_rating ? Number(item.stars || item.average_rating).toFixed(1) : '0.0',
+      ratingsTotal: item.total_reviews || item.ratings_total || 0,
+      price: item.price || item.pricing || "N/A",
       availability: item.availability || "Unavailable",
       source: 'amazon',
       sponsored: item.sponsored || false,
+      full_description: item.full_description || '',
+      product_category: item.product_category || '',
+      model: item.model || '',
+      small_description: item.small_description || ''
     };
   }
 };
@@ -80,48 +109,173 @@ const filterSponsoredProducts = (products) => {
   return products.filter(product => !product.sponsored);
 };
 
+const insertProduct = async (product) => {
+  if (!pool) {
+    console.error('Database pool not initialized');
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    // Insert into products table
+    const productQuery = `
+      INSERT INTO products (retailer_id, source, title, brand, image_url, link, full_description, product_category)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (retailer_id, source) DO UPDATE
+      SET title = EXCLUDED.title, brand = EXCLUDED.brand, image_url = EXCLUDED.image_url, 
+          link = EXCLUDED.link, full_description = EXCLUDED.full_description, 
+          product_category = EXCLUDED.product_category
+      RETURNING product_id
+    `;
+    const productValues = [
+      product.id || product.asin,
+      product.source,
+      product.title,
+      product.brand,
+      product.image,
+      product.link,
+      product.full_description,
+      product.product_category
+    ];
+    const productResult = await client.query(productQuery, productValues);
+    const productId = productResult.rows[0].product_id;
+
+    // Insert into product_details table
+    const detailsQuery = `
+      INSERT INTO product_details (product_id, rating, ratings_total, is_prime, model, small_description)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (product_id) DO UPDATE
+      SET rating = EXCLUDED.rating, ratings_total = EXCLUDED.ratings_total, 
+          is_prime = EXCLUDED.is_prime, model = EXCLUDED.model, 
+          small_description = EXCLUDED.small_description
+    `;
+    const detailsValues = [
+      productId,
+      parseFloat(product.rating) || null,
+      parseInt(product.ratingsTotal) || null,
+      product.isPrime || false,
+      product.model,
+      product.small_description
+    ];
+    await client.query(detailsQuery, detailsValues);
+
+    // Insert into price_history table
+    if (product.price && product.price !== "N/A") {
+      const priceQuery = `
+        INSERT INTO price_history (product_id, price, availability)
+        VALUES ($1, $2, $3)
+      `;
+      const priceValues = [
+        productId,
+        parseFloat(product.price.replace(/[^0-9.-]+/g,"")) || null,
+        product.availability || 'Unknown'
+      ];
+      await client.query(priceQuery, priceValues);
+    }
+
+    await client.query('COMMIT');
+    console.log(`Inserted/Updated product in database: ${product.title}`);
+  } catch (e) {
+    await client.query('ROLLBACK');
+    console.error('Error inserting/updating product in database:', e);
+  } finally {
+    client.release();
+  }
+};
+
 const fetchProducts = async (term, source, sortBy, page = 1) => {
-  const url = `https://api.scraperapi.com/structured/${source}/search`;
-  const params = {
-    api_key: process.env.SCRAPER_API_KEY,
-    query: term,
-    country: 'us',
-    page: page.toString(),
-    sort_by: sortBy || '',
-    exclude_sponsored: 'true'
-  };
+  let url;
+  let params;
+
+  // Remove any quotes from the API key
+  const apiKey = process.env.SCRAPER_API_KEY.replace(/[''"]+/g, '');
+
+  if (source === 'amazon') {
+    if (term.match(/^[A-Z0-9]{10}$/)) {  // Check if term is an ASIN
+      url = `https://api.scraperapi.com/structured/amazon/product`;
+      params = {
+        api_key: apiKey,
+        asin: term,
+        country_code: 'us',
+        tld: 'com'
+      };
+    } else {
+      url = `https://api.scraperapi.com/structured/amazon/search`;
+      params = {
+        api_key: apiKey,
+        query: term,
+        country: 'us',
+        page: page.toString(),
+        sort_by: sortBy || '',
+        exclude_sponsored: 'true'
+      };
+    }
+  } else if (source === 'walmart') {
+    if (term.match(/^[0-9]+$/)) {  // Check if term is a Walmart product ID
+      url = `https://api.scraperapi.com/structured/walmart/product`;
+      params = {
+        api_key: apiKey,
+        product_id: term,
+        country_code: 'us',
+        tld: 'com'
+      };
+    } else {
+      url = `https://api.scraperapi.com/structured/walmart/search`;
+      params = {
+        api_key: apiKey,
+        query: term,
+        country: 'us',
+        page: page.toString(),
+        sort_by: sortBy || '',
+        exclude_sponsored: 'true'
+      };
+    }
+  }
 
   try {
     console.log(`Fetching ${source} results for term: "${term}", page: ${page}, sortBy: ${sortBy}`);
-    const response = await axios.get(url, { params, timeout: 30000 }); // 30 seconds timeout
+    console.log('API Request URL:', url);
+    console.log('API Request Params:', { ...params, api_key: '[REDACTED]' });
+
+    const response = await axios.get(url, { params, timeout: 30000 });
     console.log(`Raw API response from ${source}:`, JSON.stringify(response.data, null, 2));
 
     let jsonData = response.data;
 
-    let results = [];
-    let totalPages = 1;
+    if ((source === 'amazon' && term.match(/^[A-Z0-9]{10}$/)) || 
+        (source === 'walmart' && term.match(/^[0-9]+$/))) {
+      // If it's a product query, wrap the result in an array
+      const mappedProduct = mapProduct(jsonData, source);
+      await insertProduct(mappedProduct);
+      return { results: [mappedProduct], totalPages: 1 };
+    } else {
+      // For search queries, process as before
+      let results = [];
+      let totalPages = 1;
 
-    if (source === 'walmart') {
-      // Add more detailed checks for Walmart response structure
-      if (jsonData.items && Array.isArray(jsonData.items)) {
+      if (source === 'walmart' && jsonData.items && Array.isArray(jsonData.items)) {
         results = jsonData.items;
         totalPages = jsonData.total_pages || 1;
+      } else if (source === 'amazon' && jsonData.results) {
+        results = jsonData.results;
+        totalPages = jsonData.total_pages || 1;
       } else {
-        console.error('Unexpected Walmart API response structure:', jsonData);
-        throw new Error('Unexpected Walmart API response structure');
+        console.error(`Invalid API response structure from ${source}:`, jsonData);
+        throw new Error(`Invalid API response structure from ${source}`);
       }
-    } else if (source === 'amazon' && jsonData.results) {
-      results = jsonData.results;
-      totalPages = jsonData.total_pages || 1;
-    } else {
-      console.error(`Invalid API response structure from ${source}:`, jsonData);
-      throw new Error(`Invalid API response structure from ${source}`);
+
+      const mappedResults = results.map(item => mapProduct(item, source));
+      console.log(`Mapped results for ${source}:`, JSON.stringify(mappedResults, null, 2));
+
+      // Insert all products into the database
+      for (const product of mappedResults) {
+        await insertProduct(product);
+      }
+
+      return { results: filterSponsoredProducts(mappedResults), totalPages };
     }
-
-    const mappedResults = results.map(item => mapProduct(item, source));
-    console.log(`Mapped results for ${source}:`, JSON.stringify(mappedResults, null, 2));
-
-    return { results: filterSponsoredProducts(mappedResults), totalPages };
   } catch (error) {
     console.error(`Error fetching data from ${source} API:`, error.message);
     console.error(`Error details:`, error.response ? error.response.data : 'No response data');

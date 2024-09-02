@@ -6,3 +6,4 @@ archive/
 lib/apollo-client.js
 lib/upstashRedis.js
 lib/cacheHelper.js
+schema_dump.sql

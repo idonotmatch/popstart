@@ -71,14 +71,13 @@ const ListPage = () => {
     if (typeof price === 'number') {
       return `$${price.toFixed(2)}`;
     } else if (typeof price === 'string') {
-      // Remove any non-numeric characters except for the decimal point
       const numericPrice = price.replace(/[^0-9.]/g, '');
       const parsedPrice = parseFloat(numericPrice);
       if (!isNaN(parsedPrice)) {
         return `$${parsedPrice.toFixed(2)}`;
       }
     }
-    return 'N/A'; // Return 'N/A' for invalid inputs
+    return 'N/A';
   };
 
   const calculateSubtotal = useCallback((price, quantity) => {
@@ -213,8 +212,15 @@ const ListPage = () => {
                     {formatPrice(item.lastVerifiedPrice)}
                     {item.lastVerifiedPrice !== item.originalPrice && (
                       <div className={`price-change ${parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? 'increase' : 'decrease'}`}>
-                        {parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? '▲' : '▼'}
-                        {((parseFloat(item.lastVerifiedPrice) - parseFloat(item.originalPrice)) / parseFloat(item.originalPrice) * 100).toFixed(2)}%
+                        {(() => {
+                          const originalPrice = parseFloat(item.originalPrice);
+                          const lastVerifiedPrice = parseFloat(item.lastVerifiedPrice);
+                          if (!isNaN(originalPrice) && !isNaN(lastVerifiedPrice) && originalPrice !== 0) {
+                            const changePercent = ((lastVerifiedPrice - originalPrice) / originalPrice * 100).toFixed(2);
+                            return `${lastVerifiedPrice > originalPrice ? '▲' : '▼'} ${Math.abs(changePercent)}%`;
+                          }
+                          return '';
+                        })()}
                       </div>
                     )}
                   </td>
