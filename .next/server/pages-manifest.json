@@ -3,7 +3,8 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/search/[query]": "pages/search/[query].js",
-  "/api/search": "pages/api/search.js",
   "/list": "pages/list.js",
+  "/": "pages/index.js",
+  "/api/search": "pages/api/search.js",
   "/api/refresh-item": "pages/api/refresh-item.js"
 }
