@@ -18,7 +18,7 @@ const Header = () => {
             <Link href="/list" className="my-list-button">My List</Link>
             {user ? (
               <div className="user-info">
-                <span>Welcome, {user.name}!</span>
+                {/* <span>Welcome, {user.name}!</span> */}
                 <a href="/api/auth/logout" className="auth-button logout">Logout</a>
               </div>
             ) : (
