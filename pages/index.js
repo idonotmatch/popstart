@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import { useRouter } from 'next/router';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 function HomePage() {
   const router = useRouter();
+  const { user, error, isLoading } = useUser();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [source, setSource] = useState('all');
@@ -14,14 +16,15 @@ function HomePage() {
     if (searchTerm.trim()) {
       router.push(`/search/${encodeURIComponent(searchTerm)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}`);
     } else {
-      // Handle empty search term error
       console.error('Please enter a search term');
-      // You might want to add some user feedback here, like setting an error state and displaying a message
     }
   };
 
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
   return (
-    <>
+    <div>
       <Header />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">
@@ -60,7 +63,7 @@ function HomePage() {
         </form>
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
 

@@ -1,18 +1,18 @@
-// File: pages/_app.js
 import React, { useEffect } from 'react';
 import { ApolloProvider } from '@apollo/client';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import ReactGA4 from 'react-ga4';
 import { useRouter } from 'next/router';
-import '../styles/globals.css';
-import { SearchProvider } from '../context/SearchContext';
-import { ListProvider } from '../context/ListContext'; // Import ListProvider instead of CartProvider
-import Layout from '../components/Layout';
+import { UserProvider } from '@auth0/nextjs-auth0/client';
+import '../styles/globals.css'; // Ensure this path is correct
+import { SearchProvider } from '../context/SearchContext'; // Ensure this path is correct
+import { ListProvider } from '../context/ListContext'; // Ensure this path is correct
+import Layout from '../components/Layout'; // Ensure this path is correct
 
 // Setup Apollo Client
 const client = new ApolloClient({
   link: new HttpLink({
-    uri: '/api/graphql',
+    uri: '/api/graphql', // Ensure this endpoint is correct
   }),
   cache: new InMemoryCache(),
 });
@@ -22,7 +22,12 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     // Initialize GA4 with the ID from environment variables
-    ReactGA4.initialize(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID);
+    const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+    if (gaMeasurementId) {
+      ReactGA4.initialize(gaMeasurementId);
+    } else {
+      console.error('GA Measurement ID is not defined');
+    }
 
     const handleRouteChange = (url) => {
       ReactGA4.send({ hitType: "pageview", page: url });
@@ -37,15 +42,17 @@ function MyApp({ Component, pageProps }) {
   }, [router.events]);
 
   return (
-    <ApolloProvider client={client}>
-      <SearchProvider>
-        <ListProvider>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </ListProvider>
-      </SearchProvider>
-    </ApolloProvider>
+    <UserProvider>
+      <ApolloProvider client={client}>
+        <SearchProvider>
+          <ListProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </ListProvider>
+        </SearchProvider>
+      </ApolloProvider>
+    </UserProvider>
   );
 }
 

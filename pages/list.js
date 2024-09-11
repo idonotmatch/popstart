@@ -1,4 +1,6 @@
+// pages/list.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { withPageAuthRequired } from '@auth0/nextjs-auth0/client';
 import { useList } from '../context/ListContext';
 import Header from '../components/header';
 import Footer from '../components/footer';
@@ -61,11 +63,11 @@ const ListPage = () => {
         </div>
       );
     }
-  }
+  };
 
   const formatNumber = (num) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  }
+  };
 
   const formatPrice = (price) => {
     if (typeof price === 'number') {
@@ -281,4 +283,4 @@ const ListPage = () => {
   );
 };
 
-export default ListPage;
+export default withPageAuthRequired(ListPage);
