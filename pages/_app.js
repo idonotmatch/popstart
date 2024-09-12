@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import Head from 'next/head';
 import { ApolloProvider } from '@apollo/client';
 import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 import ReactGA4 from 'react-ga4';
@@ -40,17 +41,22 @@ function MyApp({ Component, pageProps }) {
   }, [router.events]);
 
   return (
-    <UserProvider skipInitialCheck>
-      <ApolloProvider client={client}>
-        <SearchProvider>
-          <ListProvider>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </ListProvider>
-        </SearchProvider>
-      </ApolloProvider>
-    </UserProvider>
+    <>
+      <Head>
+        <title>Curious Trio - Search</title>
+      </Head>
+      <UserProvider skipInitialCheck>
+        <ApolloProvider client={client}>
+          <SearchProvider>
+            <ListProvider>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </ListProvider>
+          </SearchProvider>
+        </ApolloProvider>
+      </UserProvider>
+    </>
   );
 }
 

@@ -1,5 +1,6 @@
 // pages/list.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import Head from 'next/head';  // Add this import
 import { withPageAuthRequired } from '@auth0/nextjs-auth0/client';
 import { useList } from '../context/ListContext';
 import Header from '../components/header';
@@ -166,6 +167,11 @@ const ListPage = () => {
 
   return (
     <div className="list-page-container">
+      <Head>
+        <title>Curious Trio - Your List</title>
+        <meta name="description" content="View, research, dig into data, and manage your saved items on Curious Trio" />
+      </Head>
+
       <Header />
       <main className="list-page">
         <h1>Your List</h1>

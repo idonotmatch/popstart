@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Head from 'next/head';  // Add this import
 import Header from '../components/header';
 import Footer from '../components/footer';
 import { useRouter } from 'next/router';
@@ -20,11 +21,15 @@ function HomePage() {
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <div>searching.</div>;
   if (error) return <div>Error: {error.message}</div>;
 
   return (
     <div>
+      <Head>
+        <title>Curious Trio - Search</title>
+        <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
+      </Head>
       <Header />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">
