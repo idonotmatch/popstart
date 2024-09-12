@@ -1,9 +1,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import { useList } from '../context/ListContext';
 
 const Header = () => {
   const { user, isLoading } = useUser();
+  const { list } = useList();
 
   return (
     <header className="global-header">
@@ -15,10 +17,11 @@ const Header = () => {
       <nav className="auth-nav">
         {!isLoading && (
           <>
-            <Link href="/list" className="my-list-button">My List</Link>
+            <Link href="/list" className="my-list-button">
+              My List ({list.items.length})
+            </Link>
             {user ? (
               <div className="user-info">
-                {/* <span>Welcome, {user.name}!</span> */}
                 <a href="/api/auth/logout" className="auth-button logout">Logout</a>
               </div>
             ) : (

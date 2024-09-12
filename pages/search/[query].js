@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from '../../components/header';
 import Footer from '../../components/footer';
 import ResultItem from '../../components/ResultItem';
-import CartSummary from '../../components/ListSummary';
 import ToastContainer from '../../components/ToastContainer';
 import Cart from '../../components/cart';
 import { useSearch } from '../../context/SearchContext';
 import { useList } from '../../context/ListContext';
 
-function SearchPage() {
+function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage }) {
   const router = useRouter();
   const { query } = router.query;
-  const [sortBy, setSortBy] = useState(router.query.sort_by || '');
-  const [source, setSource] = useState(router.query.source || 'all');
-  const [page, setPage] = useState(parseInt(router.query.page || '1'));
-  const [searchTerm, setSearchTerm] = useState(query || '');
+  const [sortBy, setSortBy] = useState(initialSortBy);
+  const [source, setSource] = useState(initialSource);
+  const [page, setPage] = useState(initialPage);
+  const [searchTerm, setSearchTerm] = useState(initialQuery || '');
   const [loading, setLoading] = useState({ amazon: false, walmart: false });
   const [allResults, setAllResults] = useState({ amazon: [], walmart: [] });
   const [displayedResults, setDisplayedResults] = useState({ amazon: [], walmart: [] });
@@ -150,7 +150,7 @@ function SearchPage() {
                 key={index} 
                 item={item} 
                 addToast={addToast}
-                onAddToCart={handleAddToList}  // Changed to handleAddToList
+                onAddToCart={handleAddToList}
               />
             ))
           )}
@@ -168,11 +168,11 @@ function SearchPage() {
 
   return (
     <div className="page-container">
+      <Head>
+        <title>{`${query || searchTerm || 'Search'} | Curious Trio`}</title>
+        <meta name="description" content={`Search results for ${query || searchTerm || 'products'} on Curious Trio`} />
+      </Head>
       <Header />
-      <CartSummary 
-        cartItemCount={list.items.length}
-        onCartClick={handleListToggle}
-      />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-input-container">
@@ -241,6 +241,19 @@ function SearchPage() {
       <Footer />
     </div>
   );
+}
+
+export async function getServerSideProps(context) {
+  const { query, sort_by, source, page } = context.query;
+  
+  return {
+    props: {
+      initialQuery: query || null,
+      initialSortBy: sort_by || '',
+      initialSource: source || 'all',
+      initialPage: parseInt(page || '1'),
+    },
+  };
 }
 
 export default SearchPage;

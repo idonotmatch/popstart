@@ -26,10 +26,10 @@ function HomePage() {
 
   return (
     <div>
-      <Head>
-        <title>Curious Trio - Search</title>
-        <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
-      </Head>
+        <Head>
+          <title>Curious Trio - Search</title>
+          <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
+        </Head>
       <Header />
       <div className="container">
         <form onSubmit={handleSearch} className="search-form">

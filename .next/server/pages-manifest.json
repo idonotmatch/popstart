@@ -2,8 +2,9 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/search/[query]": "pages/search/[query].js",
   "/": "pages/index.js",
   "/api/search": "pages/api/search.js",
-  "/api/auth/[...auth0]": "pages/api/auth/[...auth0].js"
+  "/api/auth/[...auth0]": "pages/api/auth/[...auth0].js",
+  "/list": "pages/list.js",
+  "/search/[query]": "pages/search/[query].js"
 }

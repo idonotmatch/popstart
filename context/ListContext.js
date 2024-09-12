@@ -32,6 +32,7 @@ export const ListProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error parsing saved list:', error);
+        localStorage.removeItem('list');
       }
     } else {
       console.log('No saved list found in localStorage');
@@ -45,8 +46,12 @@ export const ListProvider = ({ children }) => {
       expiration: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days from now
       lastRefresh
     };
-    localStorage.setItem('list', JSON.stringify(listData));
-    console.log('Updated localStorage with new list data');
+    try {
+      localStorage.setItem('list', JSON.stringify(listData));
+      console.log('Updated localStorage with new list data');
+    } catch (error) {
+      console.error('Error saving list to localStorage:', error);
+    }
   }, [list, lastRefresh]);
 
   const generateUniqueId = (item) => {
@@ -106,7 +111,7 @@ export const ListProvider = ({ children }) => {
     setList((prevList) => {
       const updatedItems = prevList.items.map((item) => {
         if (item.uniqueId === uniqueId) {
-          return { ...item, quantity: newQuantity };
+          return { ...item, quantity: Math.max(1, newQuantity) };
         }
         return item;
       });
@@ -135,7 +140,7 @@ export const ListProvider = ({ children }) => {
       try {
         const source = item.source || (item.link?.includes('amazon.com') ? 'amazon' : 'walmart');
         const url = '/api/refresh-item';
-        const identifier = item.asin || item.id; // Use ASIN for Amazon, ID for Walmart
+        const identifier = item.asin || item.id;
         console.log(`Refreshing item: ${item.title}, Source: ${source}, Identifier: ${identifier}`);
         const response = await axios.post(url, {
           source,
@@ -181,15 +186,24 @@ export const ListProvider = ({ children }) => {
       expiration: Date.now() + 30 * 24 * 60 * 60 * 1000,
       lastRefresh: new Date().toISOString()
     };
-    localStorage.setItem('list', JSON.stringify(listData));
-    console.log('Updated localStorage after refresh');
+    try {
+      localStorage.setItem('list', JSON.stringify(listData));
+      console.log('Updated localStorage after refresh');
+    } catch (error) {
+      console.error('Error saving refreshed list to localStorage:', error);
+    }
   }, [list.items]);
 
   const clearList = useCallback(() => {
     console.log('Clearing list');
     setList({ items: [] });
-    localStorage.removeItem('list');
-    console.log('List cleared and removed from localStorage');
+    setLastRefresh(null);
+    try {
+      localStorage.removeItem('list');
+      console.log('List cleared and removed from localStorage');
+    } catch (error) {
+      console.error('Error removing list from localStorage:', error);
+    }
   }, []);
 
   return (
