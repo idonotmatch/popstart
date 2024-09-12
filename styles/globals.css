@@ -294,6 +294,14 @@ html, body {
     text-align: center;
     background-color: #fff;
     border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+
+.footer-nav a {
+    margin-right: 15px; /* Adjust this value to increase or decrease space */
+      }
+      
+.footer-nav a:last-child {
+    margin-right: 0; /* Remove margin from the last link */
+      }
 }
 
 .affiliate-disclaimer {
