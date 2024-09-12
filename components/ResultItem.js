@@ -1,6 +1,30 @@
 import React, { useState } from 'react';
 import { useList } from '../context/ListContext';
 
+// Utility functions
+const formatPrice = (price) => {
+  if (price == null || price === '') return 'Not Found';
+  
+  let numPrice;
+  if (typeof price === 'string') {
+    numPrice = parseFloat(price.replace(/[^0-9.-]+/g,""));
+  } else if (typeof price === 'number') {
+    numPrice = price;
+  } else {
+    return 'Not Found';
+  }
+
+  return isNaN(numPrice) ? 'Not Found' : `$${numPrice.toFixed(2)}`;
+};
+
+const formatRating = (rating, ratingsTotal) => {
+  const formattedRating = rating !== '0.0' ? rating : 'Not Found';
+  const formattedReviews = ratingsTotal 
+    ? `${ratingsTotal.toLocaleString()} ${ratingsTotal === 1 ? 'review' : 'reviews'}`
+    : 'No reviews';
+  return `${formattedRating} (${formattedReviews})`;
+};
+
 const ResultItem = React.memo(({ item }) => {
   const { addToList } = useList();
   const [isAdded, setIsAdded] = useState(false);
@@ -9,7 +33,7 @@ const ResultItem = React.memo(({ item }) => {
     e.preventDefault();
     addToList(item);
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000); // Reset after 2 seconds
+    setTimeout(() => setIsAdded(false), 3000); // Reset after 2 seconds
   };
 
   return (
@@ -22,11 +46,9 @@ const ResultItem = React.memo(({ item }) => {
           </p>
         </div>
         <div className="rating">
-          <p>Rating: {item.rating !== '0.0' ? item.rating : 'Not Found'} 
-             ({item.ratingsTotal ? `${item.ratingsTotal.toLocaleString()} ${item.ratingsTotal === 1 ? 'review' : 'reviews'}` : 'No reviews'})
-          </p>
+          <p>Rating: {formatRating(item.rating, item.ratingsTotal)}</p>
         </div>
-        <div className="price"><p>Price: {item.price || 'Not Found'}</p></div>
+        <div className="price"><p>Price: {formatPrice(item.price)}</p></div>
         <a href={item.link} target="_blank" rel="noreferrer" className="product-details-link">
           Product Details
         </a>
