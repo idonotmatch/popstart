@@ -131,7 +131,7 @@ const ListPage = () => {
     } else {
       numericPrice = 0;
     }
-    return (numericPrice * quantity).toFixed(2);
+    return numericPrice * quantity;
   }, []);
 
   const handleQuantityChange = useCallback((uniqueId, newQuantity) => {
@@ -143,14 +143,21 @@ const ListPage = () => {
     const sortableItems = [...items];
     if (sortConfig.key !== null) {
       sortableItems.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-  
-        if (sortConfig.key === 'price' || sortConfig.key === 'lastVerifiedPrice') {
-          aValue = parseFloat((String(aValue || '0')).replace(/[^0-9.-]+/g, ""));
-          bValue = parseFloat((String(bValue || '0')).replace(/[^0-9.-]+/g, ""));
+        let aValue, bValue;
+
+        if (sortConfig.key === 'subtotal') {
+          aValue = calculateSubtotal(a.lastVerifiedPrice || a.originalPrice, a.quantity);
+          bValue = calculateSubtotal(b.lastVerifiedPrice || b.originalPrice, b.quantity);
+        } else {
+          aValue = a[sortConfig.key];
+          bValue = b[sortConfig.key];
+
+          if (sortConfig.key === 'originalPrice' || sortConfig.key === 'lastVerifiedPrice') {
+            aValue = parseFloat((String(aValue || '0')).replace(/[^0-9.-]+/g, ""));
+            bValue = parseFloat((String(bValue || '0')).replace(/[^0-9.-]+/g, ""));
+          }
         }
-  
+
         if (aValue < bValue) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -161,9 +168,10 @@ const ListPage = () => {
       });
     }
     return sortableItems;
-  }, []);
+  }, [calculateSubtotal]);
 
   const requestSort = useCallback((key) => {
+    if (key === 'image') return; // Ignore sorting for image column
     setSortConfig(prevConfig => {
       if (prevConfig.key === key) {
         return { key, direction: prevConfig.direction === 'ascending' ? 'descending' : 'ascending' };
@@ -173,6 +181,7 @@ const ListPage = () => {
   }, []);
 
   const getSortIndicator = useCallback((columnName) => {
+    if (columnName === 'image') return ''; // Don't show sort indicator for image column
     if (sortConfig.key === columnName) {
       return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
     }
