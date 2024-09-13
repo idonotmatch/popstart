@@ -122,17 +122,40 @@ const ListPage = () => {
     return 'N/A';
   };
 
-  const calculateSubtotal = useCallback((price, quantity) => {
-    let numericPrice;
-    if (typeof price === 'string') {
-      numericPrice = parseFloat(price.replace(/[^0-9.-]+/g, ""));
-    } else if (typeof price === 'number') {
-      numericPrice = price;
-    } else {
-      numericPrice = 0;
+  const calculateItemSubtotal = useCallback((price, quantity) => {
+    const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/[^0-9.-]+/g, "")) : price;
+    const numericQuantity = parseInt(quantity, 10);
+    
+    if (isNaN(numericPrice) || isNaN(numericQuantity)) {
+      return 0; // Return 0 if either price or quantity is not a valid number
     }
-    return numericPrice * quantity;
+    
+    return numericPrice * numericQuantity;
   }, []);
+
+  const calculateTotals = useCallback(() => {
+    const sourceSubtotals = {};
+    let totalItems = 0;
+    let totalPrice = 0;
+
+    list.items.forEach(item => {
+      const source = item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart');
+      const subtotal = calculateItemSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity);
+      
+      if (sourceSubtotals[source]) {
+        sourceSubtotals[source] += subtotal;
+      } else {
+        sourceSubtotals[source] = subtotal;
+      }
+
+      totalItems += parseInt(item.quantity, 10) || 0;
+      totalPrice += subtotal;
+    });
+
+    return { sourceSubtotals, totalItems, totalPrice };
+  }, [list.items, calculateItemSubtotal]);
+
+  const { sourceSubtotals, totalItems, totalPrice } = useMemo(() => calculateTotals(), [calculateTotals]);
 
   const handleQuantityChange = useCallback((uniqueId, newQuantity) => {
     console.log("Quantity change:", uniqueId, newQuantity);
@@ -146,8 +169,8 @@ const ListPage = () => {
         let aValue, bValue;
 
         if (sortConfig.key === 'subtotal') {
-          aValue = calculateSubtotal(a.lastVerifiedPrice || a.originalPrice, a.quantity);
-          bValue = calculateSubtotal(b.lastVerifiedPrice || b.originalPrice, b.quantity);
+          aValue = calculateItemSubtotal(a.lastVerifiedPrice || a.originalPrice, a.quantity);
+          bValue = calculateItemSubtotal(b.lastVerifiedPrice || b.originalPrice, b.quantity);
         } else {
           aValue = a[sortConfig.key];
           bValue = b[sortConfig.key];
@@ -168,7 +191,7 @@ const ListPage = () => {
       });
     }
     return sortableItems;
-  }, [calculateSubtotal]);
+  }, [calculateItemSubtotal]);
 
   const requestSort = useCallback((key) => {
     if (key === 'image') return; // Ignore sorting for image column
@@ -206,12 +229,6 @@ const ListPage = () => {
   };
 
   const sortedItems = useMemo(() => sortItems(list.items, sortConfig), [list.items, sortConfig, sortItems]);
-
-  const totalItems = useMemo(() => list.items.reduce((sum, item) => sum + item.quantity, 0), [list.items]);
-  const totalPrice = useMemo(() => 
-    list.items.reduce((sum, item) => sum + parseFloat(calculateSubtotal(item.lastVerifiedPrice || item.price, item.quantity)), 0).toFixed(2),
-    [list.items, calculateSubtotal]
-  );
 
   const onDragEnd = (result) => {
     if (!result.destination) return;
@@ -294,7 +311,8 @@ const ListPage = () => {
           </>
         );
       case 'subtotal':
-        return formatPrice(calculateSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity));
+        const subtotal = calculateItemSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity);
+        return formatPrice(subtotal);
       case 'rating':
         return item.rating || 'N/A';
       case 'ratingsTotal':
@@ -337,7 +355,7 @@ const ListPage = () => {
           </button>
           <button className="styled-button" onClick={handleClearList}>Clear List</button>
           <div className="column-visibility-dropdown">
-            <button className="styled-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+          <button className="styled-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
               Data Selection
             </button>
             {isDropdownOpen && (
@@ -407,14 +425,23 @@ const ListPage = () => {
                         </Draggable>
                       ))}
                       {provided.placeholder}
-                      <tr className="list-summary">
-                        <td colSpan="4">List Summary</td>
-                        <td>Total Items: {formatNumber(totalItems)}</td>
-                        <td colSpan="7">Total Price: {formatPrice(totalPrice)}</td>
-                      </tr>
                     </tbody>
                   )}
                 </Droppable>
+                <tfoot>
+                  <tr className="list-summary">
+                    <td colSpan="4">List Summary</td>
+                    <td>Total Items: {formatNumber(totalItems)}</td>
+                    <td colSpan="7">Total Price: {formatPrice(totalPrice)}</td>
+                  </tr>
+                  {Object.entries(sourceSubtotals).map(([source, subtotal]) => (
+                    <tr key={source} className="source-summary">
+                      <td colSpan="4"></td>
+                      <td>{source} Subtotal:</td>
+                      <td colSpan="7">{formatPrice(subtotal)}</td>
+                    </tr>
+                  ))}
+                </tfoot>
               </table>
             </div>
           </DragDropContext>
