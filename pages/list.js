@@ -7,6 +7,7 @@ import Header from '../components/header';
 import Footer from '../components/footer';
 import Image from 'next/image';
 import { setReturnTo } from '../utils/auth';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 // Image Modal Component
 const ImageModal = ({ src, alt, onClose }) => (
@@ -25,6 +26,21 @@ const ListPage = () => {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [modalImage, setModalImage] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [columns, setColumns] = useState([
+    { id: 'image', title: 'Image', isVisible: true },
+    { id: 'title', title: 'Item', isVisible: true },
+    { id: 'originalPrice', title: 'Original Price', isVisible: true },
+    { id: 'lastVerifiedPrice', title: 'Last Verified Price', isVisible: true },
+    { id: 'quantity', title: 'Quantity', isVisible: true },
+    { id: 'subtotal', title: 'Subtotal', isVisible: true },
+    { id: 'rating', title: 'Avg. Rating', isVisible: true },
+    { id: 'ratingsTotal', title: 'Review Count', isVisible: true },
+    { id: 'brand', title: 'Brand', isVisible: true },
+    { id: 'source', title: 'Source', isVisible: true },
+    { id: 'retailerId', title: 'Retailer ID', isVisible: true },
+    { id: 'notes', title: 'Notes', isVisible: true },
+  ]);
 
   useEffect(() => {
     if (!userLoading && !user) {
@@ -32,6 +48,19 @@ const ListPage = () => {
       router.push('/api/auth/login');
     }
   }, [user, userLoading, router]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (isDropdownOpen && !event.target.closest('.column-visibility-dropdown')) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const getEnlargedWalmartImage = (url) => {
     try {
@@ -116,12 +145,12 @@ const ListPage = () => {
       sortableItems.sort((a, b) => {
         let aValue = a[sortConfig.key];
         let bValue = b[sortConfig.key];
-
+  
         if (sortConfig.key === 'price' || sortConfig.key === 'lastVerifiedPrice') {
-          aValue = parseFloat((aValue || '0').replace(/[^0-9.-]+/g,""));
-          bValue = parseFloat((bValue || '0').replace(/[^0-9.-]+/g,""));
+          aValue = parseFloat((String(aValue || '0')).replace(/[^0-9.-]+/g, ""));
+          bValue = parseFloat((String(bValue || '0')).replace(/[^0-9.-]+/g, ""));
         }
-
+  
         if (aValue < bValue) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
@@ -175,6 +204,112 @@ const ListPage = () => {
     [list.items, calculateSubtotal]
   );
 
+  const onDragEnd = (result) => {
+    if (!result.destination) return;
+
+    if (result.type === 'column') {
+      const newColumns = Array.from(columns);
+      const [reorderedColumn] = newColumns.splice(result.source.index, 1);
+      newColumns.splice(result.destination.index, 0, reorderedColumn);
+      setColumns(newColumns);
+    } else if (result.type === 'row') {
+      const newItems = Array.from(sortedItems);
+      const [reorderedItem] = newItems.splice(result.source.index, 1);
+      newItems.splice(result.destination.index, 0, reorderedItem);
+      // You might need to update your list context here
+    }
+  };
+
+  const toggleColumnVisibility = (columnId) => {
+    setColumns(columns.map(column =>
+      column.id === columnId ? { ...column, isVisible: !column.isVisible } : column
+    ));
+  };
+
+  const renderCell = (item, columnId) => {
+    switch (columnId) {
+      case 'image':
+        return (
+          <ImageWithFallback 
+            src={item.image} 
+            alt={item.title} 
+            width={50} 
+            height={50} 
+            item={item}
+          />
+        );
+      case 'title':
+        return item.title;
+      case 'originalPrice':
+        return formatPrice(item.originalPrice);
+      case 'lastVerifiedPrice':
+        return (
+          <>
+            {formatPrice(item.lastVerifiedPrice)}
+            {item.lastVerifiedPrice !== item.originalPrice && (
+              <div className={`price-change ${parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? 'increase' : 'decrease'}`}>
+                {(() => {
+                  const originalPrice = parseFloat(item.originalPrice);
+                  const lastVerifiedPrice = parseFloat(item.lastVerifiedPrice);
+                  if (!isNaN(originalPrice) && !isNaN(lastVerifiedPrice) && originalPrice !== 0) {
+                    const changePercent = ((lastVerifiedPrice - originalPrice) / originalPrice * 100).toFixed(2);
+                    return `${lastVerifiedPrice > originalPrice ? '▲' : '▼'} ${Math.abs(changePercent)}%`;
+                  }
+                  return '';
+                })()}
+              </div>
+            )}
+          </>
+        );
+      case 'quantity':
+        return (
+          <>
+            <input
+              className="quantity-input"
+              type="number"
+              value={item.quantity}
+              onChange={(e) => handleQuantityChange(item.uniqueId, e.target.value)}
+              min="1"
+            />
+            <br />
+            <a 
+              href="#" 
+              className="remove-link" 
+              onClick={(e) => {
+                e.preventDefault();
+                removeFromList(item.uniqueId);
+              }}
+            >
+              Remove
+            </a>
+          </>
+        );
+      case 'subtotal':
+        return formatPrice(calculateSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity));
+      case 'rating':
+        return item.rating || 'N/A';
+      case 'ratingsTotal':
+        return item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'N/A';
+      case 'brand':
+        return item.brand || 'N/A';
+      case 'source':
+        return item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart');
+      case 'retailerId':
+        return item.asin || item.id || 'N/A';
+      case 'notes':
+        return (
+          <input
+            type="text"
+            value={item.note || ''}
+            onChange={(e) => addNote(item.uniqueId, e.target.value)}
+            placeholder="Add note..."
+          />
+        );
+      default:
+        return 'N/A';
+    }
+  };
+
   if (userLoading) return <div>Loading...</div>;
   if (!user) return null;
 
@@ -187,110 +322,94 @@ const ListPage = () => {
 
       <Header />
       <main className="list-page">
-        <h1>Your List</h1>
         <div className="list-actions">
           <button className="styled-button" onClick={handleRefresh} disabled={isRefreshing}>
             {isRefreshing ? 'Refreshing...' : 'Refresh List'}
           </button>
           <button className="styled-button" onClick={handleClearList}>Clear List</button>
+          <div className="column-visibility-dropdown">
+            <button className="styled-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+              Data Selection
+            </button>
+            {isDropdownOpen && (
+              <div className="dropdown-content">
+                {columns.map(column => (
+                  <label key={column.id}>
+                    <input
+                      type="checkbox"
+                      checked={column.isVisible}
+                      onChange={() => toggleColumnVisibility(column.id)}
+                    />
+                    {column.title}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         {lastRefresh && <p>Last refreshed: {formatDate(lastRefresh)}</p>}
         {list.items.length === 0 ? (
-          <p>Your list is empty</p>
+          <p>Start populating your list</p>
         ) : (
-          <div className="table-wrapper">
-            <table className="list-table">
-              <thead>
-                <tr>
-                  <th>Image</th>
-                  <th onClick={() => requestSort('title')}>Item{getSortIndicator('title')}</th>
-                  <th onClick={() => requestSort('price')}>Original Price{getSortIndicator('price')}</th>
-                  <th onClick={() => requestSort('lastVerifiedPrice')}>Last Verified Price{getSortIndicator('lastVerifiedPrice')}</th>
-                  <th onClick={() => requestSort('quantity')}>Quantity{getSortIndicator('quantity')}</th>
-                  <th>Subtotal</th>
-                  <th onClick={() => requestSort('rating')}>Avg. Rating{getSortIndicator('rating')}</th>
-                  <th onClick={() => requestSort('ratingsTotal')}>Review Count{getSortIndicator('ratingsTotal')}</th>
-                  <th onClick={() => requestSort('brand')}>Brand{getSortIndicator('brand')}</th>
-                  <th onClick={() => requestSort('source')}>Source{getSortIndicator('source')}</th>
-                  <th>Retailer ID</th>
-                  <th>Notes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedItems.map((item) => (
-                  <tr key={item.uniqueId}>
-                    <td>
-                      <ImageWithFallback 
-                        src={item.image} 
-                        alt={item.title} 
-                        width={50} 
-                        height={50} 
-                        item={item}
-                      />
-                    </td>
-                    <td>{item.title}</td>
-                    <td>{formatPrice(item.originalPrice)}</td>
-                    <td>
-                      {formatPrice(item.lastVerifiedPrice)}
-                      {item.lastVerifiedPrice !== item.originalPrice && (
-                        <div className={`price-change ${parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? 'increase' : 'decrease'}`}>
-                          {(() => {
-                            const originalPrice = parseFloat(item.originalPrice);
-                            const lastVerifiedPrice = parseFloat(item.lastVerifiedPrice);
-                            if (!isNaN(originalPrice) && !isNaN(lastVerifiedPrice) && originalPrice !== 0) {
-                              const changePercent = ((lastVerifiedPrice - originalPrice) / originalPrice * 100).toFixed(2);
-                              return `${lastVerifiedPrice > originalPrice ? '▲' : '▼'} ${Math.abs(changePercent)}%`;
-                            }
-                            return '';
-                          })()}
-                        </div>
-                      )}
-                    </td>
-                    <td>
-                      <input
-                        className="quantity-input"
-                        type="number"
-                        value={item.quantity}
-                        onChange={(e) => handleQuantityChange(item.uniqueId, e.target.value)}
-                        min="1"
-                      />
-                      <br />
-                      <a 
-                        href="#" 
-                        className="remove-link" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          removeFromList(item.uniqueId);
-                        }}
-                      >
-                        Remove
-                      </a>
-                    </td>
-                    <td>{formatPrice(calculateSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity))}</td>
-                    <td>{item.rating || 'N/A'}</td>
-                    <td>{item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'N/A'}</td>
-                    <td>{item.brand || 'N/A'}</td>
-                    <td>{item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart')}</td>
-                    <td>{item.asin || item.id || 'N/A'}</td>
-                    <td>
-                      <input
-                        type="text"
-                        value={item.note || ''}
-                        onChange={(e) => addNote(item.uniqueId, e.target.value)}
-                        placeholder="Add note..."
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <div className="table-wrapper">
+              <table className="list-table">
+                <Droppable droppableId="columns" direction="horizontal" type="column">
+                  {(provided) => (
+                    <thead {...provided.droppableProps} ref={provided.innerRef}>
+                      <tr>
+                        {columns.filter(column => column.isVisible).map((column, index) => (
+                          <Draggable key={column.id} draggableId={column.id} index={index}>
+                            {(provided) => (
+                              <th
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                onClick={() => requestSort(column.id)}
+                              >
+                                {column.title}{getSortIndicator(column.id)}
+                              </th>
+                            )}
+                          </Draggable>
+                        ))}
+                        {provided.placeholder}
+                      </tr>
+                    </thead>
+                  )}
+                </Droppable>
+                <Droppable droppableId="rows" type="row">
+                  {(provided) => (
+                    <tbody {...provided.droppableProps} ref={provided.innerRef}>
+                      {sortedItems.map((item, index) => (
+                        <Draggable key={item.uniqueId} draggableId={item.uniqueId} index={index}>
+                          {(provided) => (
+                            <tr
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                            >
+                              {columns.filter(column => column.isVisible).map(column => (
+                                <td key={column.id}>
+                                  {renderCell(item, column.id)}
+                                </td>
+                              ))}
+                            </tr>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                      <tr className="list-summary">
+                        <td colSpan="4">List Summary</td>
+                        <td>Total Items: {formatNumber(totalItems)}</td>
+                        <td colSpan="7">Total Price: {formatPrice(totalPrice)}</td>
+                      </tr>
+                    </tbody>
+                  )}
+                </Droppable>
+              </table>
+            </div>
+          </DragDropContext>
         )}
-        <div className="list-summary">
-          <h2>List Summary</h2>
-          <p>Total Items: {formatNumber(totalItems)}</p>
-          <p>Total Price: {formatPrice(totalPrice)}</p>
-        </div>
       </main>
       <Footer />
       {modalImage && (

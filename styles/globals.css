@@ -33,12 +33,15 @@ html, body {
     overflow: hidden;
 }
 
-/* Header and Logo styles */
+/* Header Styles */
 .global-header {
     width: 100%;
     background-color: #fff;
     border-bottom: 1px solid rgba(0, 0, 0, 0.1);
     padding: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .global-header .logo {
@@ -52,7 +55,47 @@ html, body {
     height: auto;
 }
 
-/* Search form styles */
+.auth-nav {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.my-list-button, .auth-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+    transition: background-color 0.3s ease;
+}
+
+.my-list-button {
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+}
+
+.my-list-button:hover, .login:hover {
+    background-color: #0056b3;
+    opacity: 0.9;
+}
+
+.login {
+    background-color: #007bff;
+    color: white;
+}
+
+.logout {
+    background-color: #dc3545;
+    color: white;
+}
+
+.logout:hover {
+    background-color: #c82333;
+}
+
+/* Search Form Styles */
 .search-form {
     width: 100%;
     max-width: 600px;
@@ -119,7 +162,7 @@ html, body {
     cursor: pointer;
 }
 
-/* Results styles */
+/* Results Styles */
 .results-container {
     display: flex;
     flex-direction: column;
@@ -219,74 +262,160 @@ html, body {
     text-decoration: none;
     border-radius: 4px;
     font-size: 12px;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.1s;
 }
 
-.result-item .link a {
+.result-item .link a,
+.add-to-list-btn {
     background-color: #007bff;
     color: white;
+    border: none;
+    cursor: pointer;
 }
 
-.result-item .link a:hover {
+.result-item .link a:hover,
+.add-to-list-btn:hover {
     background-color: #0056b3;
 }
 
-.add-to-list-btn {
-    background-color: #007bff;
-    border: none;
-    color: white;
-    cursor: pointer;
+.add-to-list-btn:active {
+    transform: scale(0.95);
 }
 
-.add-to-list-btn:hover {
+.add-to-list-btn.added {
     background-color: #007bff;
 }
 
-/* List Summary styles */
-.list-summary {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background-color: white;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    z-index: 1000;
-    font-size: 14px;
-}
-
-.list-summary span {
-    display: block;
-    margin-bottom: 5px;
-}
-
-/* Pagination styles */
-.pagination {
+/* List Page Styles */
+.list-page-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px 0;
-    background-color: #fff;
-    width: 100%;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 }
 
-.pagination button {
-    margin: 0 10px;
-    padding: 10px 20px;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
+.list-page {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    font-size: 12px;
+}
+
+.list-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.styled-button {
+    padding: 10px 15px;
     background-color: #007bff;
     color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
-.pagination button:disabled {
+.styled-button:disabled {
     background-color: #cccccc;
-    cursor: not-allowed;
 }
 
-/* Footer styles */
+.table-wrapper {
+    flex: 1;
+    overflow: auto;
+    margin-bottom: 20px;
+}
+
+.list-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 1200px;
+}
+
+.list-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.list-table th {
+    background-color: #f2f2f2;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    cursor: pointer;
+}
+
+.list-table th::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background-color: #ddd;
+}
+
+.list-table td {
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.list-table th:hover {
+    background-color: #e6e6e6;
+}
+
+.list-table input[type="text"],
+.list-table input[type="number"] {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+
+.quantity-input {
+    width: 3ch;
+}
+
+.remove-link {
+    font-size: 0.8em;
+    color: #000000;
+    text-decoration: none;
+}
+
+.remove-link:hover {
+    text-decoration: underline;
+}
+
+.price-change {
+    font-size: 0.8em;
+}
+
+.price-change.increase {
+    color: green;
+}
+
+.price-change.decrease {
+    color: red;
+}
+
+.list-table .list-summary {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.list-table .list-summary td {
+    padding: 10px;
+    border-top: 2px solid #ddd;
+}
+
+/* Footer Styles */
 .global-footer {
     width: 100%;
     font-size: 8px;
@@ -297,12 +426,12 @@ html, body {
 }
 
 .footer-nav a {
-    margin-right: 15px; /* Adjust this value to increase or decrease space */
-  }
-  
-  .footer-nav a:last-child {
-    margin-right: 0; /* Remove margin from the last link */
-  }
+    margin-right: 15px;
+}
+
+.footer-nav a:last-child {
+    margin-right: 0;
+}
 
 .affiliate-disclaimer {
     font-size: 10px;
@@ -311,64 +440,80 @@ html, body {
     margin-top: 12px;
 }
 
-/* Error styles */
-.error-box {
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    padding: 15px;
-    margin-bottom: 20px;
+/* Modal Styles */
+.image-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.image-modal-content {
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+.image-modal-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    background: white;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Toast Styles */
+.toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.toast {
+    background-color: #4CAF50;
+    color: white;
+    padding: 16px;
     border-radius: 4px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
 }
 
-.error-box h3 {
-    margin-top: 0;
-    color: #856404;
+@keyframes slideIn {
+    from {transform: translateX(100%);}
+    to {transform: translateX(0);}
 }
 
-.walmart-error {
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-    color: #721c24;
-}
-
-.walmart-error h3 {
-    color: #721c24;
-}
-
-.amazon-error {
-    background-color: #cce5ff;
-    border-color: #b8daff;
-    color: #004085;
-}
-
-.amazon-error h3 {
-    color: #004085;
-}
-
-.loading,
-.error,
-.no-results {
-    text-align: center;
-    font-size: 14px;
-    margin: 20px 0;
+@keyframes fadeOut {
+    from {opacity: 1;}
+    to {opacity: 0;}
 }
 
 /* Media Queries */
-@media (max-width: 768px) {
-    .table-wrapper {
-        margin-bottom: 10px;
-    }
-
-    .list-table {
-        min-width: 800px; /* Adjust for mobile */
-    }
-
-    .list-summary {
-        padding: 10px;
-    }
-}
-
 @media (min-width: 769px) {
     .results-container {
         flex-direction: row;
@@ -444,10 +589,16 @@ html, body {
         text-align: center;
     }
 
+    .table-wrapper {
+        margin-bottom: 10px;
+    }
+
+    .list-table {
+        min-width: 800px;
+    }
+
     .list-summary {
-        top: 5px;
-        right: 5px;
-        font-size: 10px;
+        padding: 10px;
     }
 }
 
@@ -562,13 +713,80 @@ html, body {
     }
 
     .list-summary {
-        top: 3px;
-        right: 3px;
         font-size: 9px;
     }
 }
 
-.result-item .product-details-link {
+/* Error Styles */
+.error-box {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.error-box h3 {
+    margin-top: 0;
+    color: #856404;
+}
+
+.walmart-error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+.walmart-error h3 {
+    color: #721c24;
+}
+
+.amazon-error {
+    background-color: #cce5ff;
+    border-color: #b8daff;
+    color: #004085;
+}
+
+.amazon-error h3 {
+    color: #004085;
+}
+
+.loading,
+.error,
+.no-results {
+    text-align: center;
+    font-size: 14px;
+    margin: 20px 0;
+}
+
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0;
+    background-color: #fff;
+    width: 100%;
+}
+
+.pagination button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: white;
+}
+
+.pagination button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Additional Utility Classes */
+.product-details-link {
     display: inline-block;
     text-decoration: underline;
     font-size: 8px;
@@ -576,626 +794,46 @@ html, body {
     color: #007bff;
 }
 
-.toast-container {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-}
-
-.toast {
-    background-color: #4CAF50;
-    color: white;
-    padding: 16px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
-}
-
-@keyframes slideIn {
-    from {transform: translateX(100%);}
-    to {transform: translateX(0);}
-}
-
-@keyframes fadeOut {
-    from {opacity: 1;}
-    to {opacity: 0;}
-}
-
-.add-to-list-btn {
-    transition: background-color 0.3s, transform 0.1s;
-}
-
-.add-to-list-btn:active {
-    transform: scale(0.95);
-}
-
-.add-to-list-btn.added {
-    background-color: #007bff;
-}
-
-.list-smartsheet {
-    display: flex;
-    flex-direction: column;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.list-main-view {
-    flex: 1;
-}
-
-.list-item-row {
-    display: flex;
-    border-bottom: 1px solid #eee;
-    padding: 10px 0;
-    cursor: pointer;
-}
-
-.list-item-row.selected {
-    background-color: #f0f0f0;
-}
-
-.list-item-image {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    margin-right: 20px;
-}
-
-.list-item-details {
-    flex: 1;
-}
-
-.list-item-quantity {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.list-summary {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f8f8f8;
-    border-radius: 5px;
-}
-
-.additional-data-panel {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f0f0f0;
-    border-radius: 5px;
-}
-
-.list-modal {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 350px;
-    background-color: white;
-    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
-    z-index: 1000;
-    overflow-y: auto;
-}
-
-.list-content {
-    padding: 20px;
-}
-
-.close-list {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-.list-item {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-}
-
-.list-item-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    margin-right: 10px;
-}
-
-.list-item-details {
-    flex: 1;
-}
-
-.list-item-quantity {
-    display: flex;
-    align-items: center;
-    margin-top: 10px;
-}
-
-.list-item-quantity button {
-    width: 30px;
-    height: 30px;
-    background-color: #f0f0f0;
-    border: none;
-    cursor: pointer;
-}
-
-.list-item-quantity span {
-    margin: 0 10px;
-}
-
-.list-total {
-    margin-top: 20px;
-    text-align: right;
-}
-
-.list-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.list-table th,
-.list-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.list-table th {
-    background-color: #f2f2f2;
-    cursor: pointer;
-}
-
-.list-table input[type="text"],
-.list-table input[type="number"] {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #ddd;
-}
-
-.list-actions {
-    margin-top: 20px;
-}
-
-.list-total {
-    margin-top: 20px;
-    text-align: right;
-}
-
-.list-summary-link {
-    display: flex;
-    justify-content: space-between;
-    text-decoration: none;
-    color: inherit;
-}
-
-.list-page {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    font-size: 12px;
-}
-
-.list-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 1200px; /* Adjust this value based on your table's content */
-}
-
-.table-wrapper {
+.column-visibility-dropdown {
     position: relative;
-    overflow: auto;
-    max-height: calc(100vh - 300px); /* Adjust this value based on your layout */
-  }
-
-
-.list-table-container {
-    overflow-x: auto;
-}
-
-.list-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-}
-
-.list-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 1;
- }
-
- .list-table thead th {
-    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
-  }
-
-.list-table th,
-.list-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
-.list-summary {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f2f2f2;
-    border-radius: 5px;
-    flex-shrink: 0;
-}
-
-
-.list-table td {
-    background-color: #fff; /* Ensure cell background is opaque */
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-  }
-
-.list-table th {
-    background-color: #f2f2f2;
-    border-bottom: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-  }
-
-.list-table th:hover {
-    background-color: #ddd;
-}
-
-.list-table input[type="text"],
-.list-table input[type="number"] {
-    width: 100%;
-    padding: 5px;
-}
-
-.remove-link {
-    font-size: 0.8em;
-    color: #000000;
-    text-decoration: none;
-}
-
-.remove-link:hover {
-    text-decoration: underline;
-}
-
-.list-summary {
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f2f2f2;
-    border-radius: 5px;
-}
-
-/* You might want to add these styles for consistency */
-.list-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.list-modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-    max-width: 500px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.list-modal-close {
-    float: right;
-    font-size: 1.5em;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.list-modal-close:hover {
-    color: #777;
-}
-
-.image-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    display: inline-block;
   }
   
-  .image-modal-content {
+  .dropdown-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #f9f9f9;
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1000; /* Increased z-index */
+    padding: 12px;
+    border-radius: 4px;
+    max-height: 300px; /* Set a max height */
+    overflow-y: auto; /* Make it scrollable if content exceeds max height */
+  }
+  
+  .dropdown-content label {
+    display: block;
+    padding: 8px 0;
+    white-space: nowrap; /* Prevent wrapping of text */
+  }
+  
+  .dropdown-content label:hover {
+    background-color: #f1f1f1;
+  }
+  
+  .dropdown-content input[type="checkbox"] {
+    margin-right: 8px;
+  }
+  
+  /* Ensure the dropdown stays above other elements */
+  .list-actions {
     position: relative;
-    max-width: 90%;
-    max-height: 90%;
+    z-index: 1001; /* Higher than the dropdown to ensure buttons stay clickable */
   }
   
-  .image-modal-img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-  }
-  
-  .image-modal-close {
-    position: absolute;
-    top: -30px;
-    right: -30px;
-    background: white;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  /* Existing global styles */
-/* ... */
-
-/* List Page Styles */
-.list-page-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
-}
-
-.list-page {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    font-size: 12px;
-}
-
-.list-actions {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.styled-button {
-    padding: 10px 15px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.styled-button:disabled {
-    background-color: #cccccc;
-}
-
-.table-wrapper {
-    position: relative;
-    overflow: auto;
-    flex: 1;
-    margin-bottom: 20px;
-}
-
-.list-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    min-width: 1200px; /* Adjust this value based on your table's content */
-}
-
-.list-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-
-.list-table th {
-    background-color: #f2f2f2;
-    border-bottom: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-    position: sticky;
-    top: 0;
-    z-index: 2;
-}
-
-.list-table th::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2px;
-    background-color: #ddd;
-}
-
-.list-table td {
-    background-color: #fff;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-}
-
-.list-table th:hover {
-    background-color: #e6e6e6;
-}
-
-.list-table input[type="text"],
-.list-table input[type="number"] {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #ddd;
-}
-
-.quantity-input {
-    width: 3ch;
-}
-
-.remove-link {
-    font-size: 0.8em;
-    color: #000000;
-    text-decoration: none;
-}
-
-.remove-link:hover {
-    text-decoration: underline;
-}
-
-.price-change {
-    font-size: 0.8em;
-}
-
-.price-change.increase {
-    color: green;
-}
-
-.price-change.decrease {
-    color: red;
-}
-
-.list-summary {
-    margin-top: auto;
-    padding: 20px;
-    background-color: #f2f2f2;
-    border-radius: 5px;
-    flex-shrink: 0;
-}
-  
-  .quantity-input {
-    width: 3ch;
-  }
-  
-  .price-change {
-    font-size: 0.8em;
-  }
-  
-  .price-change.increase {
-    color: green;
-  }
-  
-  .price-change.decrease {
-    color: red;
-  }
-  
-  /* Image Modal Styles */
-  .image-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-  
-  .image-modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 5px;
-  }
-  
-  .image-modal-img {
-    max-width: 100%;
-    max-height: 80vh;
-  }
-  
-  .image-modal-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-size: 24px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  
-  .global-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 2rem;
-    background-color: #ffffff;
-  }
-  
-  .logo img {
-    height: 50px; /* Adjust as needed */
-  }
-  
-  .auth-nav {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .my-list-button {
-    padding: 0.5rem 1rem;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    font-size: 12px;
-    transition: background-color 0.3s ease;
-    display: flex;
-    align-items: center;
-  }
-  
-  .my-list-button:hover {
-    background-color: #0056b3;
-    opacity: 0.9;
-  }
-  
-  .user-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  
-  .auth-button {
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-size: 12px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .auth-button:hover {
-    opacity: 0.9;
-  }
-  
-  .login {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  .login:hover {
-    background-color: #0056b3;
-  }
-  
-  .logout {
-    background-color: #dc3545;
-    color: white;
-  }
-  
-  .logout:hover {
-    background-color: #c82333;
+  /* Optional: Add some spacing between the toggle button and the dropdown */
+  .column-visibility-dropdown .styled-button {
+    margin-bottom: 5px;
   }
