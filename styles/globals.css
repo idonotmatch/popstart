@@ -294,15 +294,15 @@ html, body {
     text-align: center;
     background-color: #fff;
     border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+}
 
 .footer-nav a {
     margin-right: 15px; /* Adjust this value to increase or decrease space */
-      }
-      
-.footer-nav a:last-child {
+  }
+  
+  .footer-nav a:last-child {
     margin-right: 0; /* Remove margin from the last link */
-      }
-}
+  }
 
 .affiliate-disclaimer {
     font-size: 10px;
@@ -355,6 +355,20 @@ html, body {
 }
 
 /* Media Queries */
+@media (max-width: 768px) {
+    .table-wrapper {
+        margin-bottom: 10px;
+    }
+
+    .list-table {
+        min-width: 800px; /* Adjust for mobile */
+    }
+
+    .list-summary {
+        padding: 10px;
+    }
+}
+
 @media (min-width: 769px) {
     .results-container {
         flex-direction: row;
@@ -762,9 +776,26 @@ html, body {
 }
 
 .list-page {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
     font-size: 12px;
 }
+
+.list-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px; /* Adjust this value based on your table's content */
+}
+
+.table-wrapper {
+    position: relative;
+    overflow: auto;
+    max-height: calc(100vh - 300px); /* Adjust this value based on your layout */
+  }
+
 
 .list-table-container {
     overflow-x: auto;
@@ -772,9 +803,19 @@ html, body {
 
 .list-table {
     width: 100%;
-    border-collapse: collapse;
-    min-width: 1200px;
+    border-collapse: separate;
+    border-spacing: 0;
 }
+
+.list-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+ }
+
+ .list-table thead th {
+    box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1);
+  }
 
 .list-table th,
 .list-table td {
@@ -783,10 +824,27 @@ html, body {
     text-align: left;
 }
 
+.list-summary {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
+
+
+.list-table td {
+    background-color: #fff; /* Ensure cell background is opaque */
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+  }
+
 .list-table th {
     background-color: #f2f2f2;
-    cursor: pointer;
-}
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+  }
 
 .list-table th:hover {
     background-color: #ddd;
@@ -896,44 +954,130 @@ html, body {
 
 /* List Page Styles */
 .list-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.list-page {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     padding: 20px;
-  }
-  
-  .list-actions {
+    font-size: 12px;
+}
+
+.list-actions {
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-  }
-  
-  .styled-button {
+}
+
+.styled-button {
     padding: 10px 15px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-  }
-  
-  .styled-button:disabled {
+}
+
+.styled-button:disabled {
     background-color: #cccccc;
-  }
-  
-  .list-table {
+}
+
+.table-wrapper {
+    position: relative;
+    overflow: auto;
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+.list-table {
     width: 100%;
-    border-collapse: collapse;
-  }
-  
-  .list-table th,
-  .list-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  .list-table th {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: 1200px; /* Adjust this value based on your table's content */
+}
+
+.list-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.list-table th {
     background-color: #f2f2f2;
-    cursor: pointer;
-  }
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.list-table th::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background-color: #ddd;
+}
+
+.list-table td {
+    background-color: #fff;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.list-table th:hover {
+    background-color: #e6e6e6;
+}
+
+.list-table input[type="text"],
+.list-table input[type="number"] {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+
+.quantity-input {
+    width: 3ch;
+}
+
+.remove-link {
+    font-size: 0.8em;
+    color: #000000;
+    text-decoration: none;
+}
+
+.remove-link:hover {
+    text-decoration: underline;
+}
+
+.price-change {
+    font-size: 0.8em;
+}
+
+.price-change.increase {
+    color: green;
+}
+
+.price-change.decrease {
+    color: red;
+}
+
+.list-summary {
+    margin-top: auto;
+    padding: 20px;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    flex-shrink: 0;
+}
   
   .quantity-input {
     width: 3ch;

@@ -1,11 +1,12 @@
-// pages/list.js
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import Head from 'next/head';  // Add this import
-import { withPageAuthRequired } from '@auth0/nextjs-auth0/client';
+import Head from 'next/head';
+import { useUser } from '@auth0/nextjs-auth0/client';
+import { useRouter } from 'next/router';
 import { useList } from '../context/ListContext';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import Image from 'next/image';
+import { setReturnTo } from '../utils/auth';
 
 // Image Modal Component
 const ImageModal = ({ src, alt, onClose }) => (
@@ -18,10 +19,19 @@ const ImageModal = ({ src, alt, onClose }) => (
 );
 
 const ListPage = () => {
+  const { user, isLoading: userLoading } = useUser();
+  const router = useRouter();
   const { list, updateQuantity, removeFromList, addNote, refreshList, lastRefresh, clearList } = useList();
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [modalImage, setModalImage] = useState(null);
+
+  useEffect(() => {
+    if (!userLoading && !user) {
+      setReturnTo(router.asPath);
+      router.push('/api/auth/login');
+    }
+  }, [user, userLoading, router]);
 
   const getEnlargedWalmartImage = (url) => {
     try {
@@ -165,6 +175,9 @@ const ListPage = () => {
     [list.items, calculateSubtotal]
   );
 
+  if (userLoading) return <div>Loading...</div>;
+  if (!user) return null;
+
   return (
     <div className="list-page-container">
       <Head>
@@ -185,91 +198,93 @@ const ListPage = () => {
         {list.items.length === 0 ? (
           <p>Your list is empty</p>
         ) : (
-          <table className="list-table">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th onClick={() => requestSort('title')}>Item{getSortIndicator('title')}</th>
-                <th onClick={() => requestSort('price')}>Original Price{getSortIndicator('price')}</th>
-                <th onClick={() => requestSort('lastVerifiedPrice')}>Last Verified Price{getSortIndicator('lastVerifiedPrice')}</th>
-                <th onClick={() => requestSort('quantity')}>Quantity{getSortIndicator('quantity')}</th>
-                <th>Subtotal</th>
-                <th onClick={() => requestSort('rating')}>Avg. Rating{getSortIndicator('rating')}</th>
-                <th onClick={() => requestSort('ratingsTotal')}>Review Count{getSortIndicator('ratingsTotal')}</th>
-                <th onClick={() => requestSort('brand')}>Brand{getSortIndicator('brand')}</th>
-                <th onClick={() => requestSort('source')}>Source{getSortIndicator('source')}</th>
-                <th>Retailer ID</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedItems.map((item) => (
-                <tr key={item.uniqueId}>
-                  <td>
-                    <ImageWithFallback 
-                      src={item.image} 
-                      alt={item.title} 
-                      width={50} 
-                      height={50} 
-                      item={item}
-                    />
-                  </td>
-                  <td>{item.title}</td>
-                  <td>{formatPrice(item.originalPrice)}</td>
-                  <td>
-                    {formatPrice(item.lastVerifiedPrice)}
-                    {item.lastVerifiedPrice !== item.originalPrice && (
-                      <div className={`price-change ${parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? 'increase' : 'decrease'}`}>
-                        {(() => {
-                          const originalPrice = parseFloat(item.originalPrice);
-                          const lastVerifiedPrice = parseFloat(item.lastVerifiedPrice);
-                          if (!isNaN(originalPrice) && !isNaN(lastVerifiedPrice) && originalPrice !== 0) {
-                            const changePercent = ((lastVerifiedPrice - originalPrice) / originalPrice * 100).toFixed(2);
-                            return `${lastVerifiedPrice > originalPrice ? '▲' : '▼'} ${Math.abs(changePercent)}%`;
-                          }
-                          return '';
-                        })()}
-                      </div>
-                    )}
-                  </td>
-                  <td>
-                    <input
-                      className="quantity-input"
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => handleQuantityChange(item.uniqueId, e.target.value)}
-                      min="1"
-                    />
-                    <br />
-                    <a 
-                      href="#" 
-                      className="remove-link" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        removeFromList(item.uniqueId);
-                      }}
-                    >
-                      Remove
-                    </a>
-                  </td>
-                  <td>{formatPrice(calculateSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity))}</td>
-                  <td>{item.rating || 'N/A'}</td>
-                  <td>{item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'N/A'}</td>
-                  <td>{item.brand || 'N/A'}</td>
-                  <td>{item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart')}</td>
-                  <td>{item.asin || item.id || 'N/A'}</td>
-                  <td>
-                    <input
-                      type="text"
-                      value={item.note || ''}
-                      onChange={(e) => addNote(item.uniqueId, e.target.value)}
-                      placeholder="Add note..."
-                    />
-                  </td>
+          <div className="table-wrapper">
+            <table className="list-table">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th onClick={() => requestSort('title')}>Item{getSortIndicator('title')}</th>
+                  <th onClick={() => requestSort('price')}>Original Price{getSortIndicator('price')}</th>
+                  <th onClick={() => requestSort('lastVerifiedPrice')}>Last Verified Price{getSortIndicator('lastVerifiedPrice')}</th>
+                  <th onClick={() => requestSort('quantity')}>Quantity{getSortIndicator('quantity')}</th>
+                  <th>Subtotal</th>
+                  <th onClick={() => requestSort('rating')}>Avg. Rating{getSortIndicator('rating')}</th>
+                  <th onClick={() => requestSort('ratingsTotal')}>Review Count{getSortIndicator('ratingsTotal')}</th>
+                  <th onClick={() => requestSort('brand')}>Brand{getSortIndicator('brand')}</th>
+                  <th onClick={() => requestSort('source')}>Source{getSortIndicator('source')}</th>
+                  <th>Retailer ID</th>
+                  <th>Notes</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {sortedItems.map((item) => (
+                  <tr key={item.uniqueId}>
+                    <td>
+                      <ImageWithFallback 
+                        src={item.image} 
+                        alt={item.title} 
+                        width={50} 
+                        height={50} 
+                        item={item}
+                      />
+                    </td>
+                    <td>{item.title}</td>
+                    <td>{formatPrice(item.originalPrice)}</td>
+                    <td>
+                      {formatPrice(item.lastVerifiedPrice)}
+                      {item.lastVerifiedPrice !== item.originalPrice && (
+                        <div className={`price-change ${parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? 'increase' : 'decrease'}`}>
+                          {(() => {
+                            const originalPrice = parseFloat(item.originalPrice);
+                            const lastVerifiedPrice = parseFloat(item.lastVerifiedPrice);
+                            if (!isNaN(originalPrice) && !isNaN(lastVerifiedPrice) && originalPrice !== 0) {
+                              const changePercent = ((lastVerifiedPrice - originalPrice) / originalPrice * 100).toFixed(2);
+                              return `${lastVerifiedPrice > originalPrice ? '▲' : '▼'} ${Math.abs(changePercent)}%`;
+                            }
+                            return '';
+                          })()}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <input
+                        className="quantity-input"
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityChange(item.uniqueId, e.target.value)}
+                        min="1"
+                      />
+                      <br />
+                      <a 
+                        href="#" 
+                        className="remove-link" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          removeFromList(item.uniqueId);
+                        }}
+                      >
+                        Remove
+                      </a>
+                    </td>
+                    <td>{formatPrice(calculateSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity))}</td>
+                    <td>{item.rating || 'N/A'}</td>
+                    <td>{item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'N/A'}</td>
+                    <td>{item.brand || 'N/A'}</td>
+                    <td>{item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart')}</td>
+                    <td>{item.asin || item.id || 'N/A'}</td>
+                    <td>
+                      <input
+                        type="text"
+                        value={item.note || ''}
+                        onChange={(e) => addNote(item.uniqueId, e.target.value)}
+                        placeholder="Add note..."
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
         <div className="list-summary">
           <h2>List Summary</h2>
@@ -289,4 +304,4 @@ const ListPage = () => {
   );
 };
 
-export default withPageAuthRequired(ListPage);
+export default ListPage;

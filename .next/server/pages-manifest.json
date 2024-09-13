@@ -4,7 +4,5 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/search/[query]": "pages/search/[query].js",
-  "/list": "pages/list.js",
-  "/api/auth/[...auth0]": "pages/api/auth/[...auth0].js",
-  "/api/search": "pages/api/search.js"
+  "/list": "pages/list.js"
 }
