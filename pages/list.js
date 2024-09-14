@@ -8,6 +8,7 @@ import Footer from '../components/footer';
 import Image from 'next/image';
 import { setReturnTo } from '../utils/auth';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import styles from '../styles/ListPage.module.css';
 
 // Image Modal Component
 const ImageModal = ({ src, alt, onClose }) => (
@@ -265,7 +266,7 @@ const ListPage = () => {
           />
         );
       case 'title':
-        return item.title;
+        return <div className={styles.titleCell}>{item.title}</div>;
       case 'originalPrice':
         return formatPrice(item.originalPrice);
       case 'lastVerifiedPrice':
@@ -337,6 +338,32 @@ const ListPage = () => {
     }
   };
 
+  const checkForAdditionalFields = useCallback(() => {
+    const displayedFields = new Set(columns.map(col => col.id));
+    const allFields = new Set();
+
+    list.items.forEach(item => {
+      Object.keys(item).forEach(key => {
+        if (!displayedFields.has(key)) {
+          allFields.add(key);
+        }
+      });
+    });
+
+    const additionalFields = Array.from(allFields);
+    if (additionalFields.length > 0) {
+      console.log('Additional fields not displayed in the table:', additionalFields);
+    } else {
+      console.log('No additional fields found.');
+    }
+
+    return additionalFields;
+  }, [list.items, columns]);
+
+useEffect(() => {
+    checkForAdditionalFields();
+  }, [checkForAdditionalFields]);
+
   if (userLoading) return <div>Loading...</div>;
   if (!user) return null;
 
@@ -355,7 +382,7 @@ const ListPage = () => {
           </button>
           <button className="styled-button" onClick={handleClearList}>Clear List</button>
           <div className="column-visibility-dropdown">
-          <button className="styled-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
+            <button className="styled-button" onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
               Data Selection
             </button>
             {isDropdownOpen && (
@@ -455,6 +482,22 @@ const ListPage = () => {
           onClose={() => setModalImage(null)}
         />
       )}
+      <style jsx>{`
+        .list-table {
+          table-layout: fixed;
+          width: 100%;
+        }
+        .list-table th,
+        .list-table td {
+          padding: 8px;
+          border: 1px solid #ddd;
+          overflow: hidden;
+        }
+        .list-table th:nth-child(2),
+        .list-table td:nth-child(2) {
+          width: 200px; /* Adjust this value as needed */
+        }
+      `}</style>
     </div>
   );
 };

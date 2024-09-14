@@ -837,3 +837,15 @@ html, body {
   .column-visibility-dropdown .styled-button {
     margin-bottom: 5px;
   }
+
+  .titleCell {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.2em;
+    max-height: 3.6em; /* This will show about 3 lines of text */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
