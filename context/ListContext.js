@@ -1,210 +1,239 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useUser } from '@auth0/nextjs-auth0/client';
 
 const ListContext = createContext();
 
-export const useList = () => {
-  const context = useContext(ListContext);
-  if (!context) {
-    throw new Error('useList must be used within a ListProvider');
-  }
-  return context;
-};
+export const useList = () => useContext(ListContext);
 
 export const ListProvider = ({ children }) => {
+  const { user, isLoading } = useUser();
   const [list, setList] = useState({ items: [] });
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    const savedList = localStorage.getItem('list');
-    console.log('Initial load - Saved list from localStorage:', savedList);
-    if (savedList) {
-      try {
-        const parsedList = JSON.parse(savedList);
-        console.log('Parsed list:', parsedList);
-        if (parsedList.expiration > Date.now()) {
-          console.log('List is not expired, setting list from localStorage');
-          setList(parsedList.data);
-          setLastRefresh(parsedList.lastRefresh);
-        } else {
-          console.log('List is expired, removing from localStorage');
-          localStorage.removeItem('list');
+    if (!isLoading) {
+      if (user) {
+        mergeGuestListWithUserList();
+      } else {
+        // Load list from localStorage for non-logged-in users
+        const storedList = localStorage.getItem('guestList');
+        if (storedList) {
+          setList(JSON.parse(storedList));
         }
-      } catch (error) {
-        console.error('Error parsing saved list:', error);
-        localStorage.removeItem('list');
       }
-    } else {
-      console.log('No saved list found in localStorage');
     }
-  }, []);
+  }, [user, isLoading]);
 
-  useEffect(() => {
-    console.log('List or lastRefresh changed, updating localStorage', { list, lastRefresh });
-    const listData = {
-      data: list,
-      expiration: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days from now
-      lastRefresh
-    };
+  const fetchList = async () => {
+    if (!user) return;
     try {
-      localStorage.setItem('list', JSON.stringify(listData));
-      console.log('Updated localStorage with new list data');
+      const response = await fetch('/api/list');
+      if (!response.ok) {
+        throw new Error('Failed to fetch list');
+      }
+      const data = await response.json();
+      console.log('Fetched list data:', data);
+      setList({ items: Array.isArray(data) ? data : [] });
+      setLastRefresh(new Date().toISOString());
     } catch (error) {
-      console.error('Error saving list to localStorage:', error);
+      console.error('Error fetching list:', error);
+      setList({ items: [] });
     }
-  }, [list, lastRefresh]);
-
-  const generateUniqueId = (item) => {
-    const idParts = [
-      item.id,
-      item.asin,
-      item.source,
-      item.title,
-      item.brand,
-      item.price
-    ].filter(Boolean);
-    
-    return idParts.join('-').replace(/[^a-zA-Z0-9-]/g, '-').toLowerCase();
   };
 
-  const addToList = useCallback((newItem) => {
-    console.log('Adding item to list:', newItem);
-    setList((prevList) => {
-      const uniqueId = generateUniqueId(newItem);
-      const existingItemIndex = prevList.items.findIndex(item => generateUniqueId(item) === uniqueId);
-
-      if (existingItemIndex !== -1) {
-        console.log('Item already exists, updating quantity');
-        const updatedItems = prevList.items.map((item, index) => 
-          index === existingItemIndex 
-            ? { ...item, quantity: (item.quantity || 1) + 1 }
-            : item
-        );
-        return { ...prevList, items: updatedItems };
-      } else {
-        console.log('Adding new item to list');
-        return {
-          ...prevList,
-          items: [...prevList.items, { 
-            ...newItem, 
-            uniqueId,
-            quantity: 1, 
-            originalPrice: newItem.price,
-            lastVerifiedPrice: newItem.price,
-            lastUpdated: new Date().toISOString()
-          }]
-        };
+  const mergeGuestListWithUserList = async () => {
+    const guestList = JSON.parse(localStorage.getItem('guestList') || '{"items": []}');
+    
+    if (guestList.items.length > 0) {
+      console.log('Merging guest list with user list');
+      
+      // First, fetch the user's existing list
+      await fetchList();
+      
+      // Then, add each item from the guest list to the user's list
+      for (let item of guestList.items) {
+        await addToList(item, true); // true flag to indicate it's a merge operation
       }
-    });
-  }, []);
-
-  const removeFromList = useCallback((uniqueId) => {
-    console.log('Removing item from list:', uniqueId);
-    setList((prevList) => ({
-      ...prevList,
-      items: prevList.items.filter((item) => item.uniqueId !== uniqueId)
-    }));
-  }, []);
-
-  const updateQuantity = useCallback((uniqueId, newQuantity) => {
-    console.log('Updating quantity:', uniqueId, newQuantity);
-    setList((prevList) => {
-      const updatedItems = prevList.items.map((item) => {
-        if (item.uniqueId === uniqueId) {
-          return { ...item, quantity: Math.max(1, newQuantity) };
-        }
-        return item;
-      });
-      return { ...prevList, items: updatedItems };
-    });
-  }, []);
-
-  const addNote = useCallback((uniqueId, note) => {
-    console.log('Adding note:', uniqueId, note);
-    setList((prevList) => ({
-      ...prevList,
-      items: prevList.items.map((item) =>
-        item.uniqueId === uniqueId ? { ...item, note } : item
-      )
-    }));
-  }, []);
-
-  const refreshList = useCallback(async () => {
-    console.log('Refreshing list, current items:', list.items);
-    if (list.items.length === 0) {
-      console.log('List is empty, nothing to refresh');
-      return;
+      
+      // Clear the guest list from localStorage
+      localStorage.removeItem('guestList');
+    } else {
+      // If there's no guest list, just fetch the user's list
+      await fetchList();
     }
-  
-    const updatedItems = await Promise.all(list.items.map(async (item) => {
+  };
+
+  const addToList = async (item, isMergeOperation = false) => {
+    console.log('Adding item to list:', item);
+    if (user) {
       try {
-        const source = item.source || (item.link?.includes('amazon.com') ? 'amazon' : 'walmart');
-        const url = '/api/refresh-item';
-        const identifier = item.asin || item.id;
-        console.log(`Refreshing item: ${item.title}, Source: ${source}, Identifier: ${identifier}`);
-        const response = await axios.post(url, {
-          source,
-          identifier,
-          country: 'us'
+        const response = await fetch('/api/list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item),
         });
-  
-        const newData = response.data;
-  
-        if (newData && newData.price) {
-          console.log(`Updated price for ${item.title}: ${newData.price}`);
-          return {
-            ...item,
-            lastVerifiedPrice: newData.price,
-            lastUpdated: new Date().toISOString()
-          };
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Successfully added item:', data);
+          // Always fetch the list after adding an item, even during merge operations
+          await fetchList();
         } else {
-          console.log(`No new data for ${item.title}, keeping original`);
-          return item;
+          const errorData = await response.json();
+          console.error('Error adding item to list:', errorData);
         }
       } catch (error) {
-        console.error(`Error refreshing item ${item.title}:`, error.response ? error.response.data : error.message);
-        return {
-          ...item,
-          refreshFailed: true,
-          refreshError: error.response ? error.response.data.error : error.message,
-          lastUpdated: new Date().toISOString()
-        };
+        console.error('Error adding item to list:', error);
       }
-    }));
-  
-    console.log('Updated items after refresh:', updatedItems);
-    setList(prevList => {
-      const newList = { ...prevList, items: updatedItems };
-      console.log('New list after refresh:', newList);
-      return newList;
-    });
-    setLastRefresh(new Date().toISOString());
-  
-    // Update localStorage
-    const listData = {
-      data: { items: updatedItems },
-      expiration: Date.now() + 30 * 24 * 60 * 60 * 1000,
-      lastRefresh: new Date().toISOString()
-    };
-    try {
-      localStorage.setItem('list', JSON.stringify(listData));
-      console.log('Updated localStorage after refresh');
-    } catch (error) {
-      console.error('Error saving refreshed list to localStorage:', error);
+    } else {
+      // For non-logged-in users, store in localStorage
+      const newList = { items: [...list.items, { ...item, id: Date.now() }] };
+      setList(newList);
+      localStorage.setItem('guestList', JSON.stringify(newList));
     }
-  }, [list.items]);
+  };
 
-  const clearList = useCallback(() => {
-    console.log('Clearing list');
-    setList({ items: [] });
-    setLastRefresh(null);
-    try {
-      localStorage.removeItem('list');
-      console.log('List cleared and removed from localStorage');
-    } catch (error) {
-      console.error('Error removing list from localStorage:', error);
+  const removeFromList = async (productId) => {
+    if (user) {
+      try {
+        const response = await fetch(`/api/list/${productId}`, { method: 'DELETE' });
+        if (response.ok) {
+          await fetchList();
+        } else {
+          throw new Error('Failed to remove item from list');
+        }
+      } catch (error) {
+        console.error('Error removing item from list:', error);
+      }
+    } else {
+      // For non-logged-in users, update localStorage
+      const newList = { items: list.items.filter(item => item.id !== productId) };
+      setList(newList);
+      localStorage.setItem('guestList', JSON.stringify(newList));
     }
-  }, []);
+  };
+
+  const updateQuantity = async (productId, newQuantity) => {
+    if (user) {
+      try {
+        const response = await fetch(`/api/list/${productId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: newQuantity }),
+        });
+        if (response.ok) {
+          await fetchList();
+        } else {
+          throw new Error('Failed to update quantity');
+        }
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+      }
+    } else {
+      // For non-logged-in users, update localStorage
+      const newList = {
+        items: list.items.map(item => 
+          item.id === productId ? { ...item, quantity: newQuantity } : item
+        )
+      };
+      setList(newList);
+      localStorage.setItem('guestList', JSON.stringify(newList));
+    }
+  };
+
+  const addNote = async (productId, note) => {
+    if (user) {
+      try {
+        const response = await fetch(`/api/list/${productId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ notes: note }),
+        });
+        if (response.ok) {
+          await fetchList();
+        } else {
+          throw new Error('Failed to add note');
+        }
+      } catch (error) {
+        console.error('Error adding note:', error);
+      }
+    } else {
+      // For non-logged-in users, update localStorage
+      const newList = {
+        items: list.items.map(item => 
+          item.id === productId ? { ...item, notes: note } : item
+        )
+      };
+      setList(newList);
+      localStorage.setItem('guestList', JSON.stringify(newList));
+    }
+  };
+
+  const refreshList = async () => {
+    if (!user) return; // Don't refresh for non-logged-in users
+    setIsRefreshing(true);
+    try {
+      console.log('Initiating list refresh');
+      const response = await fetch('/api/list', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      if (!response.ok) throw new Error('Failed to refresh list');
+      const refreshedItems = await response.json();
+      console.log('Refreshed items:', refreshedItems);
+      
+      // Update the list with the new data
+      setList({ 
+        items: refreshedItems.map(item => item.new)
+      });
+
+      // Compare old and new data
+      refreshedItems.forEach(item => {
+        const changedFields = ['name', 'price', 'image_url', 'availability'].filter(
+          key => item.old[key] !== item.new[key]
+        );
+
+        if (changedFields.length === 0) {
+          console.log(`Item unchanged: ${item.old.product_id}`);
+        } else {
+          console.log(`Item updated: ${item.old.product_id}`);
+          console.log('Changes:');
+          changedFields.forEach(key => {
+            console.log(`  ${key}: ${item.old[key]} => ${item.new[key]}`);
+          });
+        }
+      });
+
+      setLastRefresh(new Date().toISOString());
+      console.log('List refresh completed');
+    } catch (error) {
+      console.error('Error refreshing list:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const clearList = async () => {
+    if (user) {
+      try {
+        const response = await fetch('/api/list', { method: 'DELETE' });
+        if (response.ok) {
+          setList({ items: [] });
+          setLastRefresh(new Date().toISOString());
+        } else {
+          throw new Error('Failed to clear list');
+        }
+      } catch (error) {
+        console.error('Error clearing list:', error);
+      }
+    } else {
+      // For non-logged-in users, clear localStorage
+      setList({ items: [] });
+      localStorage.removeItem('guestList');
+    }
+  };
 
   return (
     <ListContext.Provider value={{ 
@@ -213,11 +242,14 @@ export const ListProvider = ({ children }) => {
       removeFromList, 
       updateQuantity, 
       addNote, 
+      refreshList, 
+      lastRefresh, 
       clearList,
-      refreshList,
-      lastRefresh 
+      isRefreshing 
     }}>
       {children}
     </ListContext.Provider>
   );
 };
+
+export default ListContext;

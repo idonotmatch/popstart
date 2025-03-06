@@ -332,7 +332,6 @@ html, body {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    min-width: 1200px;
 }
 
 .list-table thead {
@@ -413,6 +412,17 @@ html, body {
 .list-table .list-summary td {
     padding: 10px;
     border-top: 2px solid #ddd;
+}
+
+@media (max-width: 768px) {
+    .table-wrapper {
+        margin-bottom: 10px;
+    }
+
+    .list-table {
+        /* Adjust or remove the min-width for smaller screens */
+        min-width: auto;
+    }
 }
 
 /* Footer Styles */
@@ -592,11 +602,6 @@ html, body {
     .table-wrapper {
         margin-bottom: 10px;
     }
-
-    .list-table {
-        min-width: 800px;
-    }
-
     .list-summary {
         padding: 10px;
     }

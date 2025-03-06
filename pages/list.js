@@ -29,18 +29,33 @@ const ListPage = () => {
   const [modalImage, setModalImage] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [columns, setColumns] = useState([
-    { id: 'image', title: 'Image', isVisible: true },
-    { id: 'title', title: 'Item', isVisible: true },
-    { id: 'originalPrice', title: 'Original Price', isVisible: true },
-    { id: 'lastVerifiedPrice', title: 'Last Verified Price', isVisible: true },
+    { id: 'image_url', title: 'Image', isVisible: true },
+    { id: 'name', title: 'Item', isVisible: true },
+    { id: 'price', title: 'Price', isVisible: true },
     { id: 'quantity', title: 'Quantity', isVisible: true },
     { id: 'subtotal', title: 'Subtotal', isVisible: true },
     { id: 'rating', title: 'Avg. Rating', isVisible: true },
-    { id: 'ratingsTotal', title: 'Review Count', isVisible: true },
+    { id: 'review_count', title: 'Review Count', isVisible: true },
     { id: 'brand', title: 'Brand', isVisible: true },
     { id: 'source', title: 'Source', isVisible: true },
-    { id: 'retailerId', title: 'Retailer ID', isVisible: true },
+    { id: 'product_id', title: 'Product ID', isVisible: true },
     { id: 'notes', title: 'Notes', isVisible: true },
+    // New columns (hidden by default)
+    { id: 'availability', title: 'Availability', isVisible: false },
+    { id: 'product_category', title: 'Category', isVisible: false },
+    { id: 'model', title: 'Model', isVisible: false },
+    { id: 'shipping_price', title: 'Shipping Price', isVisible: false },
+    { id: 'shipping_time', title: 'Shipping Time', isVisible: false },
+    { id: 'is_coupon_exists', title: 'Coupon Available', isVisible: false },
+    { id: 'coupon_text', title: 'Coupon Details', isVisible: false },
+    { id: 'feature_bullets', title: 'Features', isVisible: false },
+    { id: 'brand_url', title: 'Brand URL', isVisible: false },
+    { id: 'shipping_condition', title: 'Shipping Condition', isVisible: false },
+    { id: 'fabric_type', title: 'Fabric Type', isVisible: false },
+    { id: 'care_instructions', title: 'Care Instructions', isVisible: false },
+    { id: 'origin', title: 'Origin', isVisible: false },
+    { id: 'pattern', title: 'Pattern', isVisible: false },
+    { id: 'country_of_origin', title: 'Country of Origin', isVisible: false },
   ]);
 
   useEffect(() => {
@@ -91,19 +106,11 @@ const ListPage = () => {
       setModalImage({ src: modalSrc, alt });
     };
 
-    try {
-      return (
-        <div onClick={handleImageClick} style={{ cursor: 'pointer' }}>
-          <Image src={imageSrc} alt={alt} width={width} height={height} />
-        </div>
-      );
-    } catch (error) {
-      return (
-        <div onClick={handleImageClick} style={{ cursor: 'pointer' }}>
-          <img src={imageSrc} alt={alt} style={{ width, height, objectFit: 'contain' }} />
-        </div>
-      );
-    }
+    return (
+      <div onClick={handleImageClick} style={{ cursor: 'pointer' }}>
+        <Image src={imageSrc} alt={alt} width={width} height={height} />
+      </div>
+    );
   };
 
   const formatNumber = (num) => {
@@ -124,11 +131,11 @@ const ListPage = () => {
   };
 
   const calculateItemSubtotal = useCallback((price, quantity) => {
-    const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/[^0-9.-]+/g, "")) : price;
+    const numericPrice = typeof price === 'number' ? price : parseFloat(price);
     const numericQuantity = parseInt(quantity, 10);
     
     if (isNaN(numericPrice) || isNaN(numericQuantity)) {
-      return 0; // Return 0 if either price or quantity is not a valid number
+      return 0;
     }
     
     return numericPrice * numericQuantity;
@@ -138,29 +145,31 @@ const ListPage = () => {
     const sourceSubtotals = {};
     let totalItems = 0;
     let totalPrice = 0;
-
-    list.items.forEach(item => {
-      const source = item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart');
-      const subtotal = calculateItemSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity);
-      
-      if (sourceSubtotals[source]) {
-        sourceSubtotals[source] += subtotal;
-      } else {
-        sourceSubtotals[source] = subtotal;
-      }
-
-      totalItems += parseInt(item.quantity, 10) || 0;
-      totalPrice += subtotal;
-    });
-
+  
+    if (Array.isArray(list.items)) {
+      list.items.forEach(item => {
+        const subtotal = calculateItemSubtotal(item.price, item.quantity);
+        
+        if (sourceSubtotals[item.source]) {
+          sourceSubtotals[item.source] += subtotal;
+        } else {
+          sourceSubtotals[item.source] = subtotal;
+        }
+  
+        totalItems += parseInt(item.quantity, 10) || 0;
+        totalPrice += subtotal;
+      });
+    } else {
+      console.error('list.items is not an array:', list.items);
+    }
+  
     return { sourceSubtotals, totalItems, totalPrice };
-  }, [list.items, calculateItemSubtotal]);
+  }, [list, calculateItemSubtotal]);
 
   const { sourceSubtotals, totalItems, totalPrice } = useMemo(() => calculateTotals(), [calculateTotals]);
 
-  const handleQuantityChange = useCallback((uniqueId, newQuantity) => {
-    console.log("Quantity change:", uniqueId, newQuantity);
-    updateQuantity(uniqueId, parseInt(newQuantity));
+  const handleQuantityChange = useCallback((productId, newQuantity) => {
+    updateQuantity(productId, parseInt(newQuantity));
   }, [updateQuantity]);
 
   const sortItems = useCallback((items, sortConfig) => {
@@ -170,15 +179,15 @@ const ListPage = () => {
         let aValue, bValue;
 
         if (sortConfig.key === 'subtotal') {
-          aValue = calculateItemSubtotal(a.lastVerifiedPrice || a.originalPrice, a.quantity);
-          bValue = calculateItemSubtotal(b.lastVerifiedPrice || b.originalPrice, b.quantity);
+          aValue = calculateItemSubtotal(a.price, a.quantity);
+          bValue = calculateItemSubtotal(b.price, b.quantity);
         } else {
           aValue = a[sortConfig.key];
           bValue = b[sortConfig.key];
 
-          if (sortConfig.key === 'originalPrice' || sortConfig.key === 'lastVerifiedPrice') {
-            aValue = parseFloat((String(aValue || '0')).replace(/[^0-9.-]+/g, ""));
-            bValue = parseFloat((String(bValue || '0')).replace(/[^0-9.-]+/g, ""));
+          if (sortConfig.key === 'price') {
+            aValue = parseFloat(aValue) || 0;
+            bValue = parseFloat(bValue) || 0;
           }
         }
 
@@ -195,7 +204,7 @@ const ListPage = () => {
   }, [calculateItemSubtotal]);
 
   const requestSort = useCallback((key) => {
-    if (key === 'image') return; // Ignore sorting for image column
+    if (key === 'image_url') return;
     setSortConfig(prevConfig => {
       if (prevConfig.key === key) {
         return { key, direction: prevConfig.direction === 'ascending' ? 'descending' : 'ascending' };
@@ -205,7 +214,7 @@ const ListPage = () => {
   }, []);
 
   const getSortIndicator = useCallback((columnName) => {
-    if (columnName === 'image') return ''; // Don't show sort indicator for image column
+    if (columnName === 'image_url') return '';
     if (sortConfig.key === columnName) {
       return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
     }
@@ -227,6 +236,127 @@ const ListPage = () => {
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  const constructProductUrl = (item) => {
+    if (item.source === 'walmart' && item.product_id) {
+      return `https://www.walmart.com/ip/${item.product_id}`;
+    } else if (item.source === 'amazon' && item.product_id) {
+      return `https://www.amazon.com/dp/${item.product_id}`;
+    }
+    return null;
+  };
+
+  const renderCell = (item, columnId) => {
+    switch (columnId) {
+      case 'image_url':
+        return (
+          <ImageWithFallback 
+            src={item.image_url} 
+            alt={item.name} 
+            width={50} 
+            height={50} 
+            item={item}
+          />
+        );
+      case 'name':
+        return <div className={styles.titleCell}>{item.name}</div>;
+      case 'price':
+        return formatPrice(item.price);
+      case 'quantity':
+        return (
+          <>
+            <input
+              className="quantity-input"
+              type="number"
+              value={item.quantity}
+              onChange={(e) => handleQuantityChange(item.product_id, e.target.value)}
+              min="1"
+            />
+            <br />
+            <a 
+              href="#" 
+              className="remove-link" 
+              onClick={(e) => {
+                e.preventDefault();
+                removeFromList(item.product_id);
+              }}
+            >
+              Remove
+            </a>
+          </>
+        );
+      case 'subtotal':
+        const subtotal = calculateItemSubtotal(item.price, item.quantity);
+        return formatPrice(subtotal);
+      case 'rating':
+        return item.rating || 'N/A';
+      case 'review_count':
+        return item.review_count ? formatNumber(item.review_count) : 'N/A';
+      case 'brand':
+        return item.brand || 'N/A';
+      case 'source':
+        const productUrl = constructProductUrl(item);
+        return productUrl ? (
+          <a 
+            href={productUrl} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="source-link"
+          >
+            {item.source || 'N/A'}
+          </a>
+        ) : (
+          item.source || 'N/A'
+        );
+      case 'product_id':
+        return item.product_id || 'N/A';
+      case 'notes':
+        return (
+          <input
+            type="text"
+            value={item.notes || ''}
+            onChange={(e) => addNote(item.product_id, e.target.value)}
+            placeholder="Add note..."
+          />
+        );
+      case 'availability':
+        return item.availability || 'N/A';
+      case 'product_category':
+        return item.product_category || 'N/A';
+      case 'model':
+        return item.model || 'N/A';
+      case 'shipping_price':
+        return formatPrice(item.shipping_price);
+      case 'shipping_time':
+        return item.shipping_time || 'N/A';
+      case 'is_coupon_exists':
+        return item.is_coupon_exists ? 'Yes' : 'No';
+      case 'coupon_text':
+        return item.coupon_text || 'N/A';
+      case 'feature_bullets':
+        return Array.isArray(item.feature_bullets) ? item.feature_bullets.join(', ') : 'N/A';
+      case 'brand_url':
+        return item.brand_url ? (
+          <a href={item.brand_url} target="_blank" rel="noopener noreferrer">
+            Brand Page
+          </a>
+        ) : 'N/A';
+      case 'shipping_condition':
+        return item.shipping_condition || 'N/A';
+      case 'fabric_type':
+        return item.fabric_type || 'N/A';
+      case 'care_instructions':
+        return item.care_instructions || 'N/A';
+      case 'origin':
+        return item.origin || 'N/A';
+      case 'pattern':
+        return item.pattern || 'N/A';
+      case 'country_of_origin':
+        return item.country_of_origin || 'N/A';
+      default:
+        return 'N/A';
+    }
   };
 
   const sortedItems = useMemo(() => sortItems(list.items, sortConfig), [list.items, sortConfig, sortItems]);
@@ -252,117 +382,6 @@ const ListPage = () => {
       column.id === columnId ? { ...column, isVisible: !column.isVisible } : column
     ));
   };
-
-  const renderCell = (item, columnId) => {
-    switch (columnId) {
-      case 'image':
-        return (
-          <ImageWithFallback 
-            src={item.image} 
-            alt={item.title} 
-            width={50} 
-            height={50} 
-            item={item}
-          />
-        );
-      case 'title':
-        return <div className={styles.titleCell}>{item.title}</div>;
-      case 'originalPrice':
-        return formatPrice(item.originalPrice);
-      case 'lastVerifiedPrice':
-        return (
-          <>
-            {formatPrice(item.lastVerifiedPrice)}
-            {item.lastVerifiedPrice !== item.originalPrice && (
-              <div className={`price-change ${parseFloat(item.lastVerifiedPrice) > parseFloat(item.originalPrice) ? 'increase' : 'decrease'}`}>
-                {(() => {
-                  const originalPrice = parseFloat(item.originalPrice);
-                  const lastVerifiedPrice = parseFloat(item.lastVerifiedPrice);
-                  if (!isNaN(originalPrice) && !isNaN(lastVerifiedPrice) && originalPrice !== 0) {
-                    const changePercent = ((lastVerifiedPrice - originalPrice) / originalPrice * 100).toFixed(2);
-                    return `${lastVerifiedPrice > originalPrice ? '▲' : '▼'} ${Math.abs(changePercent)}%`;
-                  }
-                  return '';
-                })()}
-              </div>
-            )}
-          </>
-        );
-      case 'quantity':
-        return (
-          <>
-            <input
-              className="quantity-input"
-              type="number"
-              value={item.quantity}
-              onChange={(e) => handleQuantityChange(item.uniqueId, e.target.value)}
-              min="1"
-            />
-            <br />
-            <a 
-              href="#" 
-              className="remove-link" 
-              onClick={(e) => {
-                e.preventDefault();
-                removeFromList(item.uniqueId);
-              }}
-            >
-              Remove
-            </a>
-          </>
-        );
-      case 'subtotal':
-        const subtotal = calculateItemSubtotal(item.lastVerifiedPrice || item.originalPrice, item.quantity);
-        return formatPrice(subtotal);
-      case 'rating':
-        return item.rating || 'N/A';
-      case 'ratingsTotal':
-        return item.ratingsTotal ? formatNumber(item.ratingsTotal) : 'N/A';
-      case 'brand':
-        return item.brand || 'N/A';
-      case 'source':
-        return item.source || (item.link?.includes('amazon.com') ? 'Amazon' : 'Walmart');
-      case 'retailerId':
-        return item.asin || item.id || 'N/A';
-      case 'notes':
-        return (
-          <input
-            type="text"
-            value={item.note || ''}
-            onChange={(e) => addNote(item.uniqueId, e.target.value)}
-            placeholder="Add note..."
-          />
-        );
-      default:
-        return 'N/A';
-    }
-  };
-
-  const checkForAdditionalFields = useCallback(() => {
-    const displayedFields = new Set(columns.map(col => col.id));
-    const allFields = new Set();
-
-    list.items.forEach(item => {
-      Object.keys(item).forEach(key => {
-        if (!displayedFields.has(key)) {
-          allFields.add(key);
-        }
-      });
-    });
-
-    const additionalFields = Array.from(allFields);
-    if (additionalFields.length > 0) {
-      console.log('Additional fields not displayed in the table:', additionalFields);
-    } else {
-      console.log('No additional fields found.');
-    }
-
-    return additionalFields;
-  }, [list.items, columns]);
-
-useEffect(() => {
-    checkForAdditionalFields();
-  }, [checkForAdditionalFields]);
 
   if (userLoading) return <div>Loading...</div>;
   if (!user) return null;
@@ -435,7 +454,7 @@ useEffect(() => {
                   {(provided) => (
                     <tbody {...provided.droppableProps} ref={provided.innerRef}>
                       {sortedItems.map((item, index) => (
-                        <Draggable key={item.uniqueId} draggableId={item.uniqueId} index={index}>
+                        <Draggable key={item.product_id} draggableId={item.product_id} index={index}>
                           {(provided) => (
                             <tr
                               ref={provided.innerRef}
@@ -457,15 +476,22 @@ useEffect(() => {
                 </Droppable>
                 <tfoot>
                   <tr className="list-summary">
-                    <td colSpan="4">List Summary</td>
-                    <td>Total Items: {formatNumber(totalItems)}</td>
-                    <td colSpan="7">Total Price: {formatPrice(totalPrice)}</td>
+                    <td colSpan={columns.filter(column => column.isVisible).length}>
+                      <div className="summary-content">
+                        <span>List Summary</span>
+                        <span>Total Items: {formatNumber(totalItems)}</span>
+                        <span>Total Price: {formatPrice(totalPrice)}</span>
+                      </div>
+                    </td>
                   </tr>
                   {Object.entries(sourceSubtotals).map(([source, subtotal]) => (
                     <tr key={source} className="source-summary">
-                      <td colSpan="4"></td>
-                      <td>{source} Subtotal:</td>
-                      <td colSpan="7">{formatPrice(subtotal)}</td>
+                      <td colSpan={columns.filter(column => column.isVisible).length}>
+                        <div className="summary-content">
+                          <span>{source} Subtotal:</span>
+                          <span>{formatPrice(subtotal)}</span>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tfoot>
@@ -484,18 +510,25 @@ useEffect(() => {
       )}
       <style jsx>{`
         .list-table {
-          table-layout: fixed;
           width: 100%;
+          border-collapse: separate;
+          border-spacing: 0;
         }
-        .list-table th,
         .list-table td {
           padding: 8px;
           border: 1px solid #ddd;
-          overflow: hidden;
         }
-        .list-table th:nth-child(2),
-        .list-table td:nth-child(2) {
-          width: 200px; /* Adjust this value as needed */
+        .summary-content {
+          display: flex;
+          justify-content: space-between;
+          padding: 8px;
+        }
+        .source-link {
+          color: #0066cc;
+          text-decoration: none;
+        }
+        .source-link:hover {
+          text-decoration: underline;
         }
       `}</style>
     </div>

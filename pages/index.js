@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import Head from 'next/head';  // Add this import
+import Head from 'next/head';
 import Header from '../components/header';
 import Footer from '../components/footer';
 import { useRouter } from 'next/router';
 import { useUser } from '@auth0/nextjs-auth0/client';
+import Link from 'next/link';
 
 function HomePage() {
   const router = useRouter();
@@ -11,13 +12,15 @@ function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [source, setSource] = useState('all');
+  const [searchError, setSearchError] = useState('');
 
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
+      setSearchError('');
       router.push(`/search/${encodeURIComponent(searchTerm)}?sort_by=${encodeURIComponent(sortBy)}&source=${encodeURIComponent(source)}`);
     } else {
-      console.error('Please enter a search term');
+      setSearchError('Please enter a search term');
     }
   };
 
@@ -26,12 +29,20 @@ function HomePage() {
 
   return (
     <div>
-        <Head>
-          <title>Curious Trio - Search</title>
-          <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
-        </Head>
+      <Head>
+        <title>Curious Trio - Search</title>
+        <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
+      </Head>
       <Header />
       <div className="container">
+        {user && (
+          <p>
+            {/* <Link href="/list">
+              View Your List
+            </Link> */}
+          </p>
+        )}
+        
         <form onSubmit={handleSearch} className="search-form">
           <div className="search-input-container">
             <input
@@ -43,6 +54,7 @@ function HomePage() {
             />
             <button type="submit" className="search-button">go.</button>
           </div>
+          {searchError && <p className="error">{searchError}</p>}
           <div className="search-modifiers">
             <select 
               value={sortBy} 

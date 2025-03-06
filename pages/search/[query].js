@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from '../../components/header';
@@ -37,7 +37,39 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
   };
 
   const handleAddToList = (item) => {
-    addToList(item);
+    const formattedItem = {
+      product_id: item.product_id,
+      name: item.title,
+      price: item.price,
+      quantity: 1,
+      image_url: item.image,
+      source: item.source,
+      brand: item.brand,
+      product_url: item.link,
+      rating: item.rating,
+      review_count: item.ratingsTotal,
+      availability: item.availability,
+      full_description: item.full_description,
+      small_description: item.small_description,
+      product_category: item.product_category,
+      model: item.model,
+      shipping_price: item.shipping_price,
+      shipping_time: item.shipping_time,
+      is_coupon_exists: item.is_coupon_exists,
+      coupon_text: item.coupon_text,
+      feature_bullets: item.feature_bullets,
+      brand_url: item.brand_url,
+      shipping_condition: item.shipping_condition,
+      shipping_details_url: item.shipping_details_url,
+      images: item.images,
+      average_rating: item.average_rating,
+      fabric_type: item.fabric_type,
+      care_instructions: item.care_instructions,
+      origin: item.origin,
+      pattern: item.pattern,
+      country_of_origin: item.country_of_origin
+    };
+    addToList(formattedItem);
     addToast(`${item.title.slice(0, 30)}${item.title.length > 30 ? '...' : ''} added to list`);
   };
 
@@ -129,7 +161,13 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
     const results = source === 'amazon' ? displayedResults.amazon : displayedResults.walmart;
     const isLoading = source === 'amazon' ? loading.amazon : loading.walmart;
     const errorMessage = source === 'amazon' ? error.amazon : error.walmart;
-
+  
+    const parsePrice = (price) => {
+      if (typeof price === 'number') return price;
+      if (typeof price === 'string') return parseFloat(price.replace(/[^0-9.-]+/g,""));
+      return null;
+    };
+  
     return (
       <div className={`column ${source}-results`}>
         <div className="column-header">{source.charAt(0).toUpperCase() + source.slice(1)} Results</div>
@@ -147,8 +185,18 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
           ) : (
             results.map((item, index) => (
               <ResultItem 
-                key={index} 
-                item={item} 
+                key={`${source}-${item.product_id || index}`}
+                item={{
+                  ...item,
+                  source: source,
+                  product_id: item.product_id,
+                  title: item.name,
+                  price: parsePrice(item.price),
+                  image: item.image_url,
+                  link: item.product_url,
+                  rating: item.rating ? parseFloat(item.rating) : null,
+                  ratingsTotal: item.review_count,
+                }}
                 addToast={addToast}
                 onAddToCart={handleAddToList}
               />

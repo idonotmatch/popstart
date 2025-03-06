@@ -7,7 +7,8 @@ const Footer = () => {
       <nav className="footer-nav">
         <a href="https://www.curioustrio.com/why.html">why?</a>
         <a href="mailto:dang@helldang.com?Subject=Hello%20Dang%21">feedback</a>
-        <a href="mailto:dang@helldang.com?Subject=Hello%20Dang%21">contact</a>      
+        <a href="mailto:dang@helldang.com?Subject=Hello%20Dang%21">contact</a>
+        <a href="https://www.curioustrio.com/enterprise.html">enterprise</a>      
       </nav>
     </footer>
   );
