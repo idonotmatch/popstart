@@ -58,10 +58,11 @@ export default async function handler(req, res) {
       case 'GET':
         try {
           const result = await pool.query(
-            `SELECT p.*, l.quantity, l.user_id
+            `SELECT p.*, l.quantity, l.notes, l.row_order, l.user_id
              FROM list_items l
              JOIN products p ON l.product_id = p.product_id AND l.source = p.source
-             WHERE l.user_id = $1`,
+             WHERE l.user_id = $1
+             ORDER BY l.row_order ASC, l.created_at ASC`,
             [userId]
           );
           res.status(200).json(result.rows);
