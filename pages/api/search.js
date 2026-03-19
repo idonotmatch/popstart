@@ -150,11 +150,11 @@ export const fetchProducts = async (term, source, sortBy, page = 1) => {
 
     let jsonData = response.data;
 
-    if ((source === 'amazon' && term.match(/^[A-Z0-9]{10}$/)) || 
+    if ((source === 'amazon' && term.match(/^[A-Z0-9]{10}$/)) ||
         (source === 'walmart' && term.match(/^[0-9]+$/))) {
       // If it's a product query, wrap the result in an array
       const mappedProduct = mapProduct(jsonData, source);
-      await insertProducts([mappedProduct]);
+      insertProducts([mappedProduct]).catch(e => console.warn('DB insert failed (non-fatal):', e.message));
       return { results: [mappedProduct], totalPages: 1 };
     } else {
       // For search queries, process as before
@@ -175,8 +175,8 @@ export const fetchProducts = async (term, source, sortBy, page = 1) => {
       const mappedResults = results.map(item => mapProduct(item, source));
       console.log(`Mapped results for ${source}:`, JSON.stringify(mappedResults, null, 2));
 
-      // Insert all products into the database
-      await insertProducts(mappedResults);
+      // Insert products into the database (non-blocking — DB failure won't break search)
+      insertProducts(mappedResults).catch(e => console.warn('DB insert failed (non-fatal):', e.message));
 
       return { results: filterSponsoredProducts(mappedResults), totalPages };
     }
