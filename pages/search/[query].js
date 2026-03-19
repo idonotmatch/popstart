@@ -168,12 +168,28 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
       return null;
     };
   
+    const SkeletonCard = () => (
+      <div className="skeleton-card">
+        <div className="skeleton-img skeleton-shimmer" />
+        <div className="skeleton-details">
+          <div className="skeleton-badge skeleton-shimmer" />
+          <div className="skeleton-line skeleton-shimmer" style={{width: '90%'}} />
+          <div className="skeleton-line skeleton-shimmer" style={{width: '60%'}} />
+          <div className="skeleton-price skeleton-shimmer" />
+          <div className="skeleton-line skeleton-shimmer" style={{width: '40%'}} />
+        </div>
+      </div>
+    );
+
     return (
       <div className={`column ${source}-results`}>
-        <div className="column-header">{source.charAt(0).toUpperCase() + source.slice(1)} Results</div>
+        <div className="column-header">
+          <span className={`column-source-dot ${source}`} />
+          {source.charAt(0).toUpperCase() + source.slice(1)} Results
+        </div>
         <div className="results-scroll">
           {isLoading ? (
-            <p>Searching {source}</p>
+            <div>{[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}</div>
           ) : errorMessage ? (
             <div className={`error-box ${source}-error`}>
               <h3>{source.charAt(0).toUpperCase() + source.slice(1)} Results Unavailable</h3>
@@ -256,9 +272,10 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
             </select>
           </div>
         </form>
-        <p className="affiliate-disclaimer">
-          *purchase links are associate/affiliate links and I may (or may not) earn from qualifying purchases
-        </p>
+        <div className="affiliate-banner">
+          <span className="affiliate-banner-icon">✦</span>
+          Sponsored results removed &mdash; we earn a small commission on purchases, which never affects rankings.
+        </div>
         {error.general && <p className="error">{error.general}</p>}
         {query && (
           <div className="results-container">

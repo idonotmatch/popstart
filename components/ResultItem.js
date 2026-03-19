@@ -1,64 +1,88 @@
 import React, { useState } from 'react';
 import { useList } from '../context/ListContext';
 
-// Utility functions
 const formatPrice = (price) => {
-  if (price == null || price === '') return 'Not Found';
-  
+  if (price == null || price === '') return null;
   let numPrice;
   if (typeof price === 'string') {
-    numPrice = parseFloat(price.replace(/[^0-9.-]+/g,""));
+    numPrice = parseFloat(price.replace(/[^0-9.-]+/g, ''));
   } else if (typeof price === 'number') {
     numPrice = price;
   } else {
-    return 'Not Found';
+    return null;
   }
-
-  return isNaN(numPrice) ? 'Not Found' : `$${numPrice.toFixed(2)}`;
+  return isNaN(numPrice) ? null : `$${numPrice.toFixed(2)}`;
 };
 
 const formatRating = (rating, ratingsTotal) => {
-  const formattedRating = rating !== '0.0' ? rating : 'Not Found';
-  const formattedReviews = ratingsTotal 
-    ? `${ratingsTotal.toLocaleString()} ${ratingsTotal === 1 ? 'review' : 'reviews'}`
-    : 'No reviews';
-  return `${formattedRating} (${formattedReviews})`;
+  if (!rating || rating === '0.0') return null;
+  const stars = '★'.repeat(Math.round(parseFloat(rating))) + '☆'.repeat(5 - Math.round(parseFloat(rating)));
+  const reviews = ratingsTotal ? `(${Number(ratingsTotal).toLocaleString()})` : '';
+  return { stars, rating: parseFloat(rating).toFixed(1), reviews };
 };
 
-const ResultItem = React.memo(({ item }) => {
+const SOURCE_LABELS = {
+  amazon: { label: 'Amazon', color: '#FF9900', textColor: '#111' },
+  walmart: { label: 'Walmart', color: '#0071CE', textColor: '#fff' },
+};
+
+const ResultItem = React.memo(({ item, onAddToCart }) => {
   const { addToList } = useList();
   const [isAdded, setIsAdded] = useState(false);
 
   const handleAddToList = (e) => {
     e.preventDefault();
-    addToList(item);
+    if (onAddToCart) {
+      onAddToCart(item);
+    } else {
+      addToList(item);
+    }
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 3000); // Reset after 2 seconds
+    setTimeout(() => setIsAdded(false), 3000);
   };
+
+  const formattedPrice = formatPrice(item.price);
+  const formattedRating = formatRating(item.rating, item.ratingsTotal);
+  const source = item.source || 'amazon';
+  const sourceInfo = SOURCE_LABELS[source] || SOURCE_LABELS.amazon;
 
   return (
     <div className="result-item">
-      <div className="image"><img src={item.image} alt={item.title} /></div>
+      <div className="image">
+        <img src={item.image} alt={item.title} />
+      </div>
       <div className="details">
+        <div className="result-meta">
+          <span className="source-badge" style={{ backgroundColor: sourceInfo.color, color: sourceInfo.textColor }}>
+            {sourceInfo.label}
+          </span>
+        </div>
         <div className="title">
-          <p title={item.title} className={`${item.title?.length > 80 ? 'tooltip' : ''}`}>
+          <p title={item.title}>
             {item.title?.slice(0, 80)}{item.title?.length > 80 ? '...' : ''}
           </p>
         </div>
-        <div className="rating">
-          <p>Rating: {formatRating(item.rating, item.ratingsTotal)}</p>
-        </div>
-        <div className="price"><p>Price: {formatPrice(item.price)}</p></div>
-        <a href={item.link} target="_blank" rel="noreferrer" className="product-details-link">
-          Product Details
-        </a>
+        {formattedPrice ? (
+          <div className="price-prominent">{formattedPrice}</div>
+        ) : (
+          <div className="price-unavailable">Price unavailable</div>
+        )}
+        {formattedRating && (
+          <div className="rating">
+            <span className="stars" title={`${formattedRating.rating} out of 5`}>{formattedRating.stars}</span>
+            <span className="review-count">{formattedRating.rating} {formattedRating.reviews}</span>
+          </div>
+        )}
         <div className="actions">
-          <button 
-            onClick={handleAddToList} 
+          <a href={item.link} target="_blank" rel="noreferrer" className="product-details-link">
+            View product ↗
+          </a>
+          <button
+            onClick={handleAddToList}
             className={`add-to-list-btn ${isAdded ? 'added' : ''}`}
             disabled={isAdded}
           >
-            {isAdded ? 'Added to List ✓' : 'Add to List'}
+            {isAdded ? '✓ Added' : '+ Add to List'}
           </button>
         </div>
       </div>
