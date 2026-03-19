@@ -30,10 +30,10 @@ export const cacheHelper = {
     }
     return null;
   },
-  set: async (key, value, options) => {
+  set: async (key, value, ...args) => {
     if (redisClient) {
       try {
-        await redisClient.set(key, value, options);
+        await redisClient.set(key, value, ...args);
       } catch (error) {
         console.warn('Redis set error:', error);
       }
@@ -207,7 +207,7 @@ export const streamResults = async (sourceToFetch, term, sort_by, page) => {
       } else {
         // If no results in database, fetch from API
         const { results: sourceResults, totalPages } = await fetchProducts(term, sourceToFetch, sort_by, parseInt(page));
-        await cacheHelper.set(cacheKey, JSON.stringify({ results: sourceResults, totalPages }), { EX: 3600 }); // Cache for 1 hour
+        await cacheHelper.set(cacheKey, JSON.stringify({ results: sourceResults, totalPages }), 'EX', 3600); // Cache for 1 hour
         return { source: sourceToFetch, results: sourceResults, totalPages };
       }
     }
