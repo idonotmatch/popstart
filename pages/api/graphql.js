@@ -1,7 +1,7 @@
 import { ApolloServer, gql } from 'apollo-server-micro';
 import axios from 'axios';
 import Redis from 'ioredis';
-import { upsertProduct, getCurrentProductInfo, getProductPriceHistory } from '../lib/db';
+import { upsertProduct, getSpecificProduct, getProductPriceHistory } from '../../lib/db';
 
 // Initialize Redis client
 const redisClient = new Redis(process.env.REDIS_URL);
