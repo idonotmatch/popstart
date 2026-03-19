@@ -28,7 +28,7 @@ function HomePage() {
   if (error) return <div>Error: {error.message}</div>;
 
   return (
-    <div>
+    <div className="page-container">
       <Head>
         <title>Curious Trio - Search</title>
         <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
