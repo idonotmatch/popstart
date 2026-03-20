@@ -73,7 +73,6 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
       country_of_origin: item.country_of_origin
     };
     addToList(formattedItem);
-    addToast(`${item.title.slice(0, 30)}${item.title.length > 30 ? '...' : ''} added to list`);
   };
 
   const handleListToggle = () => {

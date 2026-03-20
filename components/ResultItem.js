@@ -82,6 +82,23 @@ const ResultItem = React.memo(({ item, onAddToCart, sentiment, sentimentBrand })
             <span className="review-count">{formattedRating.rating} {formattedRating.reviews}</span>
           </div>
         )}
+        <div className="product-meta-row">
+          {(sentimentBrand || (item.brand && item.brand !== 'N/A')) && (
+            <span className="meta-chip">
+              {sentimentBrand || item.brand}
+            </span>
+          )}
+          {item.model && (
+            <span className="meta-chip meta-chip--muted">
+              {item.model}
+            </span>
+          )}
+          {item.availability && item.availability !== 'Unavailable' && item.availability !== 'In stock' && (
+            <span className="meta-chip meta-chip--availability">
+              {item.availability}
+            </span>
+          )}
+        </div>
         {sentiment && (
           <div className="sentiment-row">
             <SentimentBadge sentiment={sentiment} brandName={sentimentBrand || item.brand} />
