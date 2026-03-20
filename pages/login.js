@@ -17,7 +17,7 @@ const Login = () => {
   if (error) return <div>{error.message}</div>;
 
   return (
-    <>
+    <div className="page-container">
       <Header />
       <div className="login-container">
         <h1>Welcome to Curious Trio</h1>
@@ -27,7 +27,7 @@ const Login = () => {
         </a>
       </div>
       <Footer />
-    </>
+    </div>
   );
 };
 

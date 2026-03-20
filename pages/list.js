@@ -30,6 +30,23 @@ const DEFAULT_COLUMNS = [
 
 const SOURCE_COLORS = { amazon: '#FF9900', walmart: '#0071CE' };
 
+// Build an Amazon multi-item cart URL from a list of items.
+// Uses the affiliate tag if set via NEXT_PUBLIC_AMAZON_AFFILIATE_TAG.
+function buildAmazonCartUrl(items) {
+  const amazonItems = items.filter(
+    i => i.source === 'amazon' && /^[A-Z0-9]{10}$/.test(i.product_id || '')
+  );
+  if (amazonItems.length === 0) return null;
+  const params = new URLSearchParams();
+  amazonItems.forEach((item, idx) => {
+    params.set(`ASIN.${idx + 1}`, item.product_id);
+    params.set(`Quantity.${idx + 1}`, String(item.quantity || 1));
+  });
+  const tag = process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG;
+  if (tag) params.set('tag', tag);
+  return `https://www.amazon.com/gp/aws/cart/add.html?${params.toString()}`;
+}
+
 const fmt = (price) => {
   const n = parseFloat(price);
   return isNaN(n) ? '—' : `$${n.toFixed(2)}`;
@@ -348,6 +365,15 @@ export default function ListPage() {
           <button className="toolbar-btn" onClick={refreshList} disabled={isRefreshing}>
             {isRefreshing ? 'Refreshing…' : '↻ Refresh prices'}
           </button>
+
+          {(() => {
+            const cartUrl = buildAmazonCartUrl(items);
+            return cartUrl ? (
+              <a href={cartUrl} target="_blank" rel="noreferrer" className="toolbar-btn toolbar-btn-amazon">
+                🛒 Add to Amazon cart
+              </a>
+            ) : null;
+          })()}
 
           <div className="col-menu-wrapper" ref={colMenuRef}>
             <button className="toolbar-btn" onClick={() => setShowColumnMenu(v => !v)}>⊞ Columns</button>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useList } from '../context/ListContext';
+import SentimentBadge from './SentimentBadge';
 
 const formatPrice = (price) => {
   if (price == null || price === '') return null;
@@ -26,7 +27,7 @@ const SOURCE_LABELS = {
   walmart: { label: 'Walmart', color: '#0071CE', textColor: '#fff' },
 };
 
-const ResultItem = React.memo(({ item, onAddToCart }) => {
+const ResultItem = React.memo(({ item, onAddToCart, sentiment, sentimentBrand }) => {
   const { addToList } = useList();
   const [isAdded, setIsAdded] = useState(false);
 
@@ -71,6 +72,11 @@ const ResultItem = React.memo(({ item, onAddToCart }) => {
           <div className="rating">
             <span className="stars" title={`${formattedRating.rating} out of 5`}>{formattedRating.stars}</span>
             <span className="review-count">{formattedRating.rating} {formattedRating.reviews}</span>
+          </div>
+        )}
+        {sentiment && (
+          <div className="sentiment-row">
+            <SentimentBadge sentiment={sentiment} brandName={sentimentBrand || item.brand} />
           </div>
         )}
         <div className="actions">

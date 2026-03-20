@@ -34,7 +34,7 @@ function HomePage() {
         <meta name="description" content="Search for products without paid ads across multiple sources with Curious Trio" />
       </Head>
       <Header />
-      <div className="container">
+      <div className="container" style={{ justifyContent: 'center', alignItems: 'center' }}>
         {user && (
           <p>
             {/* <Link href="/list">
