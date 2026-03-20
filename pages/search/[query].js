@@ -93,39 +93,41 @@ function SearchPage({ initialQuery, initialSortBy, initialSource, initialPage })
       return;
     }
 
-    setLoading({ amazon: true, walmart: true });
+    const sources = source === 'all' ? ['amazon', 'walmart'] : [source];
+    const initialLoading = { amazon: false, walmart: false };
+    sources.forEach(s => { initialLoading[s] = true; });
+    setLoading(initialLoading);
     setError({});
     setAllResults({ amazon: [], walmart: [] });
     setDisplayedResults({ amazon: [], walmart: [] });
     setTotalPages({ amazon: 1, walmart: 1 });
 
-    try {
-      const response = await fetch(`/api/search?term=${encodeURIComponent(query)}&sort_by=${encodeURIComponent(sortBy)}&page=${page}&source=${source}`);
-      const data = await response.json();
+    // Collect final values for cache after all fetches complete
+    const collected = { results: { amazon: [], walmart: [] }, totalPages: { amazon: 1, walmart: 1 } };
 
-      const newResults = {
-        amazon: data.find(r => r.source === 'amazon')?.results || [],
-        walmart: data.find(r => r.source === 'walmart')?.results || []
-      };
-      const newTotalPages = {
-        amazon: data.find(r => r.source === 'amazon')?.totalPages || 1,
-        walmart: data.find(r => r.source === 'walmart')?.totalPages || 1
-      };
-      const newErrors = {
-        amazon: data.find(r => r.source === 'amazon')?.error,
-        walmart: data.find(r => r.source === 'walmart')?.error
-      };
+    const fetchSource = async (src) => {
+      try {
+        const res = await fetch(`/api/search?term=${encodeURIComponent(query)}&sort_by=${encodeURIComponent(sortBy)}&page=${page}&source=${src}`);
+        const data = await res.json();
+        const srcData = Array.isArray(data) ? (data.find(r => r.source === src) || data[0]) : data;
+        const results = srcData?.results || [];
+        const pages = srcData?.totalPages || 1;
+        collected.results[src] = results;
+        collected.totalPages[src] = pages;
+        // Update state immediately as each source resolves — no waiting for the other
+        setAllResults(prev => ({ ...prev, [src]: results }));
+        setDisplayedResults(prev => ({ ...prev, [src]: results }));
+        setTotalPages(prev => ({ ...prev, [src]: pages }));
+        if (srcData?.error) setError(prev => ({ ...prev, [src]: srcData.error }));
+      } catch {
+        setError(prev => ({ ...prev, [src]: 'Failed to fetch results. Please try again.' }));
+      } finally {
+        setLoading(prev => ({ ...prev, [src]: false }));
+      }
+    };
 
-      setAllResults(newResults);
-      setDisplayedResults(newResults);
-      setTotalPages(newTotalPages);
-      setError(newErrors);
-      setSearchResults(cacheKey, { results: newResults, totalPages: newTotalPages });
-    } catch (error) {
-      setError({ general: 'Failed to fetch results. Please try again.' });
-    } finally {
-      setLoading({ amazon: false, walmart: false });
-    }
+    await Promise.all(sources.map(fetchSource));
+    setSearchResults(cacheKey, { results: collected.results, totalPages: collected.totalPages });
   }, [query, sortBy, page, source, getSearchResults, setSearchResults]);
 
   useEffect(() => {

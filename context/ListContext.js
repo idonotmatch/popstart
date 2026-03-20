@@ -43,10 +43,21 @@ export const ListProvider = ({ children }) => {
     const guestList = JSON.parse(localStorage.getItem('guestList') || '{"items":[]}');
     if (guestList.items.length > 0) {
       await fetchList();
+      let allSaved = true;
       for (const item of guestList.items) {
-        await addToList(item, true);
+        try {
+          const res = await fetch('/api/list', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item),
+          });
+          if (!res.ok) allSaved = false;
+        } catch {
+          allSaved = false;
+        }
       }
-      localStorage.removeItem('guestList');
+      if (allSaved) localStorage.removeItem('guestList');
+      await fetchList();
     } else {
       await fetchList();
     }

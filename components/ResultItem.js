@@ -28,18 +28,26 @@ const SOURCE_LABELS = {
 };
 
 const ResultItem = React.memo(({ item, onAddToCart, sentiment, sentimentBrand }) => {
-  const { addToList } = useList();
-  const [isAdded, setIsAdded] = useState(false);
+  const { list, addToList } = useList();
+  const [isAdding, setIsAdding] = useState(false);
 
-  const handleAddToList = (e) => {
+  const isInList = list.items.some(
+    i => i.product_id === item.product_id && i.source === item.source
+  );
+
+  const handleAddToList = async (e) => {
     e.preventDefault();
-    if (onAddToCart) {
-      onAddToCart(item);
-    } else {
-      addToList(item);
+    if (isInList) return;
+    setIsAdding(true);
+    try {
+      if (onAddToCart) {
+        onAddToCart(item);
+      } else {
+        await addToList(item);
+      }
+    } finally {
+      setIsAdding(false);
     }
-    setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 3000);
   };
 
   const formattedPrice = formatPrice(item.price);
@@ -85,10 +93,10 @@ const ResultItem = React.memo(({ item, onAddToCart, sentiment, sentimentBrand })
           </a>
           <button
             onClick={handleAddToList}
-            className={`add-to-list-btn ${isAdded ? 'added' : ''}`}
-            disabled={isAdded}
+            className={`add-to-list-btn ${(isInList || isAdding) ? 'added' : ''}`}
+            disabled={isInList || isAdding}
           >
-            {isAdded ? '✓ Added' : '+ Add to List'}
+            {isInList ? '✓ In List' : isAdding ? 'Adding…' : '+ Add to List'}
           </button>
         </div>
       </div>

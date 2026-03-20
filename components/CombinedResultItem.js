@@ -26,8 +26,8 @@ const formatRating = (rating, ratingsTotal) => {
  * `secondary` is the matching product from the other retailer.
  */
 const CombinedResultItem = React.memo(({ primary, secondary, sentiment, sentimentBrand }) => {
-  const { addToList } = useList();
-  const [addedSrc, setAddedSrc] = useState(null);
+  const { list, addToList } = useList();
+  const [addingSrc, setAddingSrc] = useState(null);
 
   const primaryPrice = formatPrice(primary.price);
   const secondaryPrice = formatPrice(secondary.price);
@@ -46,21 +46,27 @@ const CombinedResultItem = React.memo(({ primary, secondary, sentiment, sentimen
 
   const formattedRating = formatRating(primary.rating, primary.review_count);
 
-  const handleAdd = (item, src) => {
-    addToList({
-      product_id: item.product_id,
-      name: item.name,
-      price: formatPrice(item.price),
-      quantity: 1,
-      image_url: item.image_url,
-      source: src,
-      brand: item.brand,
-      product_url: item.product_url,
-      rating: item.rating,
-      review_count: item.review_count,
-    });
-    setAddedSrc(src);
-    setTimeout(() => setAddedSrc(null), 3000);
+  const primaryInList = list.items.some(i => i.product_id === primary.product_id && i.source === primarySrc);
+  const secondaryInList = list.items.some(i => i.product_id === secondary.product_id && i.source === secondarySrc);
+
+  const handleAdd = async (item, src) => {
+    setAddingSrc(src);
+    try {
+      await addToList({
+        product_id: item.product_id,
+        name: item.name,
+        price: formatPrice(item.price),
+        quantity: 1,
+        image_url: item.image_url,
+        source: src,
+        brand: item.brand,
+        product_url: item.product_url,
+        rating: item.rating,
+        review_count: item.review_count,
+      });
+    } finally {
+      setAddingSrc(null);
+    }
   };
 
   return (
@@ -134,17 +140,17 @@ const CombinedResultItem = React.memo(({ primary, secondary, sentiment, sentimen
         <div className="combined-actions">
           <button
             onClick={() => handleAdd(primary, primarySrc)}
-            className={`add-to-list-btn ${addedSrc === primarySrc ? 'added' : ''}`}
-            disabled={!!addedSrc}
+            className={`add-to-list-btn ${(primaryInList || addingSrc === primarySrc) ? 'added' : ''}`}
+            disabled={primaryInList || !!addingSrc}
           >
-            {addedSrc === primarySrc ? '✓ Added' : `+ ${primaryConfig.label}`}
+            {primaryInList ? '✓ In List' : addingSrc === primarySrc ? 'Adding…' : `+ ${primaryConfig.label}`}
           </button>
           <button
             onClick={() => handleAdd(secondary, secondarySrc)}
-            className={`add-to-list-btn ${addedSrc === secondarySrc ? 'added' : ''}`}
-            disabled={!!addedSrc}
+            className={`add-to-list-btn ${(secondaryInList || addingSrc === secondarySrc) ? 'added' : ''}`}
+            disabled={secondaryInList || !!addingSrc}
           >
-            {addedSrc === secondarySrc ? '✓ Added' : `+ ${secondaryConfig.label}`}
+            {secondaryInList ? '✓ In List' : addingSrc === secondarySrc ? 'Adding…' : `+ ${secondaryConfig.label}`}
           </button>
         </div>
       </div>

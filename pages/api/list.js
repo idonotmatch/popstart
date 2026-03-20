@@ -2,7 +2,43 @@ import { getSession } from '@auth0/nextjs-auth0';
 import { pool, upsertProduct, updateProductPrice  } from '../../lib/db';
 import { fetchProducts } from './search'; // Make sure this import path is correct
 
+let schemaReady = false;
+async function ensureSchema() {
+  if (schemaReady) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS products (
+      source VARCHAR(50) NOT NULL,
+      product_id VARCHAR(255) NOT NULL,
+      name TEXT, brand VARCHAR(255), price NUMERIC, image_url TEXT,
+      product_url TEXT, rating NUMERIC, review_count INTEGER,
+      availability VARCHAR(100), full_description TEXT, small_description TEXT,
+      product_category VARCHAR(255), model VARCHAR(255), shipping_price NUMERIC,
+      shipping_time VARCHAR(100), is_coupon_exists BOOLEAN DEFAULT false,
+      coupon_text TEXT, feature_bullets JSONB DEFAULT '[]', brand_url TEXT,
+      shipping_condition VARCHAR(255), fabric_type VARCHAR(255),
+      care_instructions TEXT, origin VARCHAR(255), pattern VARCHAR(255),
+      country_of_origin VARCHAR(255), updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (source, product_id)
+    )
+  `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS list_items (
+      id SERIAL PRIMARY KEY,
+      user_id VARCHAR(255) NOT NULL,
+      product_id VARCHAR(255) NOT NULL,
+      source VARCHAR(50) NOT NULL,
+      quantity INTEGER DEFAULT 1,
+      notes TEXT,
+      row_order INTEGER,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (user_id, product_id, source)
+    )
+  `);
+  schemaReady = true;
+}
+
 export default async function handler(req, res) {
+  await ensureSchema();
   try {
     const session = await getSession(req, res);
 
