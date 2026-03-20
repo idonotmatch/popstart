@@ -17,7 +17,9 @@ async function ensureSchema() {
       coupon_text TEXT, feature_bullets JSONB DEFAULT '[]', brand_url TEXT,
       shipping_condition VARCHAR(255), fabric_type VARCHAR(255),
       care_instructions TEXT, origin VARCHAR(255), pattern VARCHAR(255),
-      country_of_origin VARCHAR(255), updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      country_of_origin VARCHAR(255),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (source, product_id)
     )
   `);
@@ -34,12 +36,22 @@ async function ensureSchema() {
       UNIQUE (user_id, product_id, source)
     )
   `);
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS price_history (
+      id SERIAL PRIMARY KEY,
+      product_id VARCHAR(255) NOT NULL,
+      source VARCHAR(50) NOT NULL,
+      current_price NUMERIC,
+      original_price NUMERIC,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
   schemaReady = true;
 }
 
 export default async function handler(req, res) {
-  await ensureSchema();
   try {
+    await ensureSchema();
     const session = await getSession(req, res);
 
     if (!session || !session.user) {
@@ -81,8 +93,10 @@ export default async function handler(req, res) {
           );
           console.log('List item insert/update result:', listItemResult.rows[0]);
 
-          // Update the price history
-          await updateProductPrice(product_id, source, price);
+          // Update the price history (non-fatal — don't fail the add if price_history insert fails)
+          updateProductPrice(product_id, source, price).catch(e =>
+            console.warn('price_history update failed (non-fatal):', e.message)
+          );
 
           res.status(200).json(listItemResult.rows[0]);
         } catch (error) {
